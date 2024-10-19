@@ -62,3 +62,13 @@ class VarLenSparseFeat(namedtuple('VarLenSparseFeat',
     def __hash__(self):
         return self.name.__hash__()
 
+
+class DenseFeat(namedtuple('Dense',
+                           ['name', 'dimension', 'dtype'])):
+    __slots__ = ()
+
+    def __new__(cls, name, dimension=1, dtype="float32"):
+        return super(DenseFeat, cls).__new__(cls, name, dimension, dtype)
+
+    def __hash__(self):
+        return self.name.__hash__()
