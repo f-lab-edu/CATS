@@ -22,3 +22,43 @@ class SparseFeat(namedtuple('SparseFeat',
 
     def __hash__(self):
         return self.name.__hash__()
+
+
+class VarLenSparseFeat(namedtuple('VarLenSparseFeat',
+                                  ['sparsefeat', 'maxlen', 'combiner', 'length_name'])):
+    __slots__ = ()
+
+    def __new__(cls, sparsefeat, maxlen, combiner="mean", length_name=None):
+        return super(VarLenSparseFeat, cls).__new__(cls, sparsefeat, maxlen, combiner, length_name)
+
+    @property
+    def name(self):
+        return self.sparsefeat.name
+
+    @property
+    def vocabulary_size(self):
+        return self.sparsefeat.vocabulary_size
+
+    @property
+    def embedding_dim(self):
+        return self.sparsefeat.embedding_dim
+
+    @property
+    def use_hash(self):
+        return self.sparsefeat.use_hash
+
+    @property
+    def dtype(self):
+        return self.sparsefeat.dtype
+
+    @property
+    def embedding_name(self):
+        return self.sparsefeat.embedding_name
+
+    @property
+    def group_name(self):
+        return self.sparsefeat.group_name
+
+    def __hash__(self):
+        return self.name.__hash__()
+
