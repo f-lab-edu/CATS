@@ -8,7 +8,7 @@ class SparseFeat(namedtuple('SparseFeat',
                              'group_name'])):
     __slots__ = ()
 
-    def __new__(cls, name, vocabulary_size, embedding_dim=4, use_hash=False, dtype="int32", embedding_name=None,
+    def __new__(cls, name: str, vocabulary_size: int, embedding_dim=4, use_hash=False, dtype="int32", embedding_name=None,
                 group_name=DEFAULT_GROUP_NAME):
         if embedding_name is None:
             embedding_name = name
