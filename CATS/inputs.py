@@ -12,7 +12,7 @@ class SparseFeat(namedtuple('SparseFeat',
                 group_name=DEFAULT_GROUP_NAME):
         if embedding_name is None:
             embedding_name = name
-        elif embedding_name == 'auto':
+        elif embedding_dim == 'auto':
             embedding_dim = 6 * int(pow(vocabulary_size, 0.25))
         if use_hash:
             raise NotImplementedError("Feature hashing is not supported in PyTorch version. "
