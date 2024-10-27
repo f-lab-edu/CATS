@@ -70,6 +70,8 @@ class DenseFeat(namedtuple('Dense',
     __slots__ = ()
 
     def __new__(cls, name: str, dimension=1, dtype="float32"):
+        if dimension < 0 and not isinstance(dimension, int):
+            raise ValueError("dimension must bigger then 0 and must be integer ")
         return super(DenseFeat, cls).__new__(cls, name, dimension, dtype)
 
     def __hash__(self):
