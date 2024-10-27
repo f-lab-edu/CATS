@@ -45,37 +45,75 @@ class VarLenSparseFeat(namedtuple('VarLenSparseFeat',
 
     def __new__(cls, sparsefeat: SparseFeat, maxlen: int, combiner: Literal['mean', 'max', 'sum'] = 'mean',
                 length_name=None):
+        """
+         :param sparsefeat: a single categorical data's info namedtuple
+         :param maxlen: maximum categories length
+         :param combiner: combining method for features ('sum', 'mean', 'max')
+         :param length_name: feature length name
+         """
         return super(VarLenSparseFeat, cls).__new__(cls, sparsefeat, maxlen, combiner, length_name)
 
     @property
     def name(self):
+        """
+         VarLenSparseFeat's name
+         :return: sparsefeat.name
+         """
         return self.sparsefeat.name
 
     @property
     def vocabulary_size(self):
+        """
+        VarLenSparseFeat's vocabulary size
+        :return: sparsefeat.vocabulary_size
+        """
         return self.sparsefeat.vocabulary_size
 
     @property
     def embedding_dim(self):
+        """
+         VarLenSparseFeat's embedding dimension
+         :return: sparsefeat.embedding_dim
+         """
         return self.sparsefeat.embedding_dim
 
     @property
     def use_hash(self):
+        """
+           whether to use hash
+          :return: sparsefeat.use_hash
+          """
         return self.sparsefeat.use_hash
 
     @property
     def dtype(self):
+        """
+        data's type
+        :return: sparsefeat.dtype
+        """
         return self.sparsefeat.dtype
 
     @property
     def embedding_name(self):
+        """
+        embedding's name
+        :return: sparsefeat.embedding_name
+        """
         return self.sparsefeat.embedding_name
 
     @property
     def group_name(self):
+        """
+        group's name
+        :return: sparsefeat.group_name
+        """
         return self.sparsefeat.group_name
 
     def __hash__(self):
+        """
+         Determines the hash value based on the name.
+         :return: self.name's hash
+         """
         return self.name.__hash__()
 
 
