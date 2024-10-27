@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from typing import Union
+from typing import Union, Literal
 
 
 class Identity(nn.Module):
@@ -17,7 +17,7 @@ class Identity(nn.Module):
         return inputs
 
 
-def activation_layer(act_name: Union[str, nn.Module]) -> nn.Module:
+def activation_layer(act_name: Union[Literal['sigmoid', 'relu', 'prelu', 'identity'], nn.Module]) -> nn.Module:
     """
     Get activation layers
     :param act_name: activation function name
