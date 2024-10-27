@@ -3,6 +3,20 @@ import torch.nn as nn
 from typing import Union
 
 
+class Identity(nn.Module):
+
+    def __init__(self, **kwargs):
+        super(Identity, self).__init__()
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        """
+        return inputs
+        :param inputs: inputs tensor
+        :return: inputs
+        """
+        return inputs
+
+
 def activation_layer(act_name: Union[str, nn.Module]) -> nn.Module:
     """
     Get activation layers
@@ -16,6 +30,8 @@ def activation_layer(act_name: Union[str, nn.Module]) -> nn.Module:
             act_layer = nn.ReLU(inplace=True)
         elif act_name.lower() == 'prelu':
             act_layer = nn.PReLU()
+        elif act_name.lower() == 'identity':
+            act_layer = nn.Identity()
     elif issubclass(act_name, nn.Module):
         act_layer = act_name()
     else:
