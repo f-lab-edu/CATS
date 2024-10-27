@@ -122,9 +122,19 @@ class DenseFeat(namedtuple('Dense',
     __slots__ = ()
 
     def __new__(cls, name: str, dimension=1, dtype="float32"):
+        """
+          Returns information about a numeric data.
+          :param name: numeric data's attribute name
+          :param dimension: dimension number
+          :param dtype: data's type
+        """
         if dimension < 0 and not isinstance(dimension, int):
             raise ValueError("dimension must bigger then 0 and must be integer ")
         return super(DenseFeat, cls).__new__(cls, name, dimension, dtype)
 
     def __hash__(self):
+        """
+          Determines the hash value based on the name.
+          :return: self.name's hash
+        """
         return self.name.__hash__()
