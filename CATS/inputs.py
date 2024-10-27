@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import Literal
 
 DEFAULT_GROUP_NAME = "default_group"
 
@@ -28,7 +29,8 @@ class VarLenSparseFeat(namedtuple('VarLenSparseFeat',
                                   ['sparsefeat', 'maxlen', 'combiner', 'length_name'])):
     __slots__ = ()
 
-    def __new__(cls, sparsefeat: SparseFeat, maxlen: int, combiner="mean", length_name=None):
+    def __new__(cls, sparsefeat: SparseFeat, maxlen: int, combiner: Literal['mean', 'max', 'sum'] = 'mean',
+                length_name=None):
         return super(VarLenSparseFeat, cls).__new__(cls, sparsefeat, maxlen, combiner, length_name)
 
     @property
