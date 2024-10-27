@@ -7,6 +7,16 @@ DEFAULT_GROUP_NAME = "default_group"
 class SparseFeat(namedtuple('SparseFeat',
                             ['name', 'vocabulary_size', 'embedding_dim', 'use_hash', 'dtype', 'embedding_name',
                              'group_name'])):
+    """
+     Returns information about a single categorical data.
+     :param name: feature's name
+     :param vocabulary_size: input category name
+     :param embedding_dim: Converted embedding's dimension
+     :param use_hash: whether to use hash
+     :param dtype: data's type
+     :param embedding_name: embedding's name
+     :param group_name: group's name
+     """
     __slots__ = ()
 
     def __new__(cls, name: str, vocabulary_size: int, embedding_dim=4, use_hash=False, dtype="int32", embedding_name=None,
@@ -22,6 +32,10 @@ class SparseFeat(namedtuple('SparseFeat',
                                               embedding_name, group_name)
 
     def __hash__(self):
+        """
+         Determines the hash value based on the name.
+         :return: self.name's hash
+         """
         return self.name.__hash__()
 
 
