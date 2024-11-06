@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from typing import Literal
 
 DEFAULT_GROUP_NAME = "default_group"
@@ -138,3 +138,36 @@ class DenseFeat(namedtuple('Dense',
           :return: self.name's hash
         """
         return self.name.__hash__()
+
+
+def build_input_features(feature_columns: list) -> dict:
+    """
+    Return an input feature dictionary based on various types of features (SparseFeat, DenseFeat, VarLenSparseFeat).
+    input feature dictionary stores the start and end inices of each feature, helping the model identify the location of
+    each feature in the input data.
+    :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+    :return: dictionary about features
+    """
+    features = OrderedDict()
+
+    start = 0
+    for feat in feature_columns:
+        feat_name = feat.name
+        if feat_name in features:
+            continue
+        if isinstance(feat, SparseFeat):
+            features[feat_name] = (start, start + 1)
+            start += 1
+        elif isinstance(feat, DenseFeat):
+            features[feat_name] = (start, start + feat.dimension)
+            start += feat.dimension
+        elif isinstance(feat, VarLenSparseFeat):
+            features[feat_name] = (start, start + feat.maxlen)
+            start += feat.maxlen
+            if feat.length_name is not None and feat.length_name not in features:
+                features[feat.length_name] = (start, start+1)
+                start += 1
+        else:
+            raise TypeError("Invalid feature column type, got", type(feat))
+    return features
+
