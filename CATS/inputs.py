@@ -140,6 +140,16 @@ class DenseFeat(namedtuple('Dense',
         return self.name.__hash__()
 
 
+def get_feature_names(feature_columns: list) -> list:
+    """
+    Get list of feature names
+    :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+    :return: list about features dictionary's keys
+    """
+    features = build_input_features(feature_columns)
+    return list(features.keys())
+
+
 def build_input_features(feature_columns: list) -> dict:
     """
     Return an input feature dictionary based on various types of features (SparseFeat, DenseFeat, VarLenSparseFeat).
