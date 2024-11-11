@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from typing import Union, Literal
 
-from .activation import activation_layer
+from activation import activation_layer
 
 
 class DNN(nn.Module):
@@ -10,7 +10,7 @@ class DNN(nn.Module):
     def __init__(self, inputs_dim: int, hidden_units: list,
                  activation: Union[Literal['sigmoid', 'relu', 'prelu', 'identity'], nn.Module] = 'relu',
                  l2_reg: float = 0, dropout_rate: int = 0, use_bn: bool = False,
-                 init_std: float = 0.0001, seed: int = 1024, device: Literal['cpu', 'gpu'] = 'cpu'):
+                 init_std: float = 0.0001, seed: int = 1024, device: Literal['cpu', 'cuda', 'mps'] = 'cpu'):
         """
         The multi perceptron layer.
         :param inputs_dim: input feature dimension.
@@ -70,3 +70,26 @@ class DNN(nn.Module):
             deep_input = fc
 
         return deep_input
+
+
+if __name__ == "__main__":
+    inputs_dim = 10
+    hidden_units = [32, 16, 3]
+    l2_reg = 0.01
+    use_bn = True
+    seed = 42
+    device = 'mps'  # in mac..
+
+    model = DNN(
+        inputs_dim=inputs_dim,
+        hidden_units=hidden_units,
+        l2_reg=l2_reg,
+        use_bn=use_bn,
+        seed=seed,
+        device=device
+    )
+
+    input_tensor = torch.randn(3, inputs_dim).to(device)
+    output = model(input_tensor)
+    print("Output Tensor Shape:", output.shape)  # 출력 텐서의 형태 확인
+    print("Output Tensor:", output)  # 출력 텐서 내용 확인
