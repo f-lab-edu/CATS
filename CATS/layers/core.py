@@ -1,7 +1,7 @@
+from typing import Literal, Union
+
 import torch
 import torch.nn as nn
-from typing import Union, Literal
-
 from activation import activation_layer
 
 
