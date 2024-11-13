@@ -1,4 +1,4 @@
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from typing import Literal
 
 DEFAULT_GROUP_NAME = "default_group"
