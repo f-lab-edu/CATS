@@ -157,7 +157,7 @@ def get_feature_names(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenS
     return list(features.keys())
 
 
-def build_input_features(feature_columns: list) -> dict:
+def build_input_features(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]]) -> dict:
     """
     Return an input feature dictionary based on various types of features (SparseFeat, DenseFeat, VarLenSparseFeat).
     input feature dictionary stores the start and end inices of each feature, helping the model identify the location of
