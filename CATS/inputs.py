@@ -185,6 +185,6 @@ def build_input_features(feature_columns: List[Union[SparseFeat, DenseFeat, VarL
                 features[feat.length_name] = (curr_features_idx, curr_features_idx+1)
                 curr_features_idx += 1
         else:
-            raise TypeError("Invalid feature column type, got", type(feat))
+            raise TypeError(f"Invalid feature column type, got {type(feat)}")
     return features
 
