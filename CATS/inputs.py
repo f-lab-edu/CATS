@@ -1,5 +1,5 @@
 from collections import OrderedDict, namedtuple
-from typing import Literal
+from typing import List, Literal, Union
 
 DEFAULT_GROUP_NAME = "default_group"
 
@@ -140,7 +140,7 @@ class DenseFeat(namedtuple('Dense',
         return self.name.__hash__()
 
 
-def get_feature_names(feature_columns: list) -> list:
+def get_feature_names(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]]) -> list:
     """
     Get list of feature names
     :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
