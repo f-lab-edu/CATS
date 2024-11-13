@@ -146,6 +146,13 @@ def get_feature_names(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenS
     :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
     :return: list about features dictionary's keys
     """
+    if feature_columns is None:
+        raise ValueError("feature_columns is None. feature_columns must be list")
+    if not isinstance(feature_columns, list):
+        raise ValueError(f"feature_columns is {type(feature_columns)}, feature_columns must be list.")
+    if not all(isinstance(feature, (SparseFeat, DenseFeat, VarLenSparseFeat)) for feature in feature_columns):
+        raise TypeError(
+            "All elements in feature_columns must be instances of SparseFeat, DenseFeat or VarLenSparseFeat.")
     features = build_input_features(feature_columns)
     return list(features.keys())
 
