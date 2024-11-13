@@ -167,23 +167,23 @@ def build_input_features(feature_columns: List[Union[SparseFeat, DenseFeat, VarL
     """
     features = OrderedDict()
 
-    start = 0
+    curr_features_idx = 0
     for feat in feature_columns:
         feat_name = feat.name
         if feat_name in features:
             continue
         if isinstance(feat, SparseFeat):
-            features[feat_name] = (start, start + 1)
-            start += 1
+            features[feat_name] = (curr_features_idx, curr_features_idx + 1)
+            curr_features_idx += 1
         elif isinstance(feat, DenseFeat):
-            features[feat_name] = (start, start + feat.dimension)
-            start += feat.dimension
+            features[feat_name] = (curr_features_idx, curr_features_idx + feat.dimension)
+            curr_features_idx += feat.dimension
         elif isinstance(feat, VarLenSparseFeat):
-            features[feat_name] = (start, start + feat.maxlen)
-            start += feat.maxlen
+            features[feat_name] = (curr_features_idx, curr_features_idx + feat.maxlen)
+            curr_features_idx += feat.maxlen
             if feat.length_name is not None and feat.length_name not in features:
-                features[feat.length_name] = (start, start+1)
-                start += 1
+                features[feat.length_name] = (curr_features_idx, curr_features_idx+1)
+                curr_features_idx += 1
         else:
             raise TypeError("Invalid feature column type, got", type(feat))
     return features
