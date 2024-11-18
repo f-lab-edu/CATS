@@ -72,7 +72,7 @@ class DNN(nn.Module):
         return deep_input
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":              # python core.py
     inputs_dim = 10
     hidden_units = [32, 16, 3]
     l2_reg = 0.01
