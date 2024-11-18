@@ -49,7 +49,7 @@ class DNN(nn.Module):
 
         self.to(device)
 
-    def forward(self, inputs: torch.Tensor):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         Forward Pass
         :param inputs: input tensors
