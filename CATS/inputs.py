@@ -1,5 +1,5 @@
-from collections import namedtuple
-from typing import Literal
+from collections import OrderedDict, namedtuple
+from typing import List, Literal, Union
 
 DEFAULT_GROUP_NAME = "default_group"
 
@@ -138,3 +138,53 @@ class DenseFeat(namedtuple('Dense',
           :return: self.name's hash
         """
         return self.name.__hash__()
+
+
+def get_feature_names(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]]) -> list:
+    """
+    Get list of feature names
+    :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+    :return: list about features dictionary's keys
+    """
+    if feature_columns is None:
+        raise ValueError("feature_columns is None. feature_columns must be list")
+    if not isinstance(feature_columns, list):
+        raise ValueError(f"feature_columns is {type(feature_columns)}, feature_columns must be list.")
+    if not all(isinstance(feature, (SparseFeat, DenseFeat, VarLenSparseFeat)) for feature in feature_columns):
+        raise TypeError(
+            "All elements in feature_columns must be instances of SparseFeat, DenseFeat or VarLenSparseFeat.")
+    features = build_input_features(feature_columns)
+    return list(features.keys())
+
+
+def build_input_features(feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]]) -> dict:
+    """
+    Return an input feature dictionary based on various types of features (SparseFeat, DenseFeat, VarLenSparseFeat).
+    input feature dictionary stores the start and end inices of each feature, helping the model identify the location of
+    each feature in the input data.
+    :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+    :return: dictionary about features
+    """
+    features = OrderedDict()
+
+    curr_features_idx = 0
+    for feat in feature_columns:
+        feat_name = feat.name
+        if feat_name in features:
+            continue
+        if isinstance(feat, SparseFeat):
+            features[feat_name] = (curr_features_idx, curr_features_idx + 1)
+            curr_features_idx += 1
+        elif isinstance(feat, DenseFeat):
+            features[feat_name] = (curr_features_idx, curr_features_idx + feat.dimension)
+            curr_features_idx += feat.dimension
+        elif isinstance(feat, VarLenSparseFeat):
+            features[feat_name] = (curr_features_idx, curr_features_idx + feat.maxlen)
+            curr_features_idx += feat.maxlen
+            if feat.length_name is not None and feat.length_name not in features:
+                features[feat.length_name] = (curr_features_idx, curr_features_idx+1)
+                curr_features_idx += 1
+        else:
+            raise TypeError(f"Invalid feature column type, got {type(feat)}")
+    return features
+
