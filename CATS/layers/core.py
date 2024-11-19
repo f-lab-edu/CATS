@@ -7,10 +7,20 @@ from .activation import activation_layer
 
 class DNN(nn.Module):
 
-    def __init__(self, inputs_dim: int, hidden_units: list,
-                 activation: Union[Literal['sigmoid', 'relu', 'prelu', 'identity'], nn.Module] = 'relu',
-                 l2_reg: float = 0, dropout_rate: int = 0, use_bn: bool = False,
-                 init_std: float = 0.0001, seed: int = 1024, device: Literal['cpu', 'cuda', 'mps'] = 'cpu'):
+    def __init__(
+        self,
+        inputs_dim: int,
+        hidden_units: list,
+        activation: Union[
+            Literal["sigmoid", "relu", "prelu", "identity"], nn.Module
+        ] = "relu",
+        l2_reg: float = 0,
+        dropout_rate: int = 0,
+        use_bn: bool = False,
+        init_std: float = 0.0001,
+        seed: int = 1024,
+        device: Literal["cpu", "cuda", "mps"] = "cpu",
+    ):
         """
         The multi perceptron layer.
         :param inputs_dim: input feature dimension.
@@ -36,17 +46,26 @@ class DNN(nn.Module):
         hidden_units = [inputs_dim] + list(hidden_units)
 
         self.linears = nn.ModuleList(
-            [nn.Linear(hidden_units[i], hidden_units[i+1]) for i in range(len(hidden_units) - 1)])
+            [
+                nn.Linear(hidden_units[i], hidden_units[i + 1])
+                for i in range(len(hidden_units) - 1)
+            ]
+        )
 
         if self.use_bn:
             self.bn = nn.ModuleList(
-                [nn.BatchNorm1d(hidden_units[i + 1])for i in range(len(hidden_units) - 1)])
+                [
+                    nn.BatchNorm1d(hidden_units[i + 1])
+                    for i in range(len(hidden_units) - 1)
+                ]
+            )
 
         self.activation_layers = nn.ModuleList(
-            [activation_layer(activation) for i in range(len(hidden_units)-1)])
+            [activation_layer(activation) for i in range(len(hidden_units) - 1)]
+        )
 
         for name, tensor in self.linears.named_parameters():
-            if 'weight' in name:
+            if "weight" in name:
                 nn.init.normal_(tensor, mean=0, std=init_std)
 
         self.to(device)
@@ -75,7 +94,7 @@ class DNN(nn.Module):
 
 
 if __name__ == "__main__":
-    """ Module for Execution in Testing
+    """Module for Execution in Testing
     python -m CATS.layers.core
     """
     inputs_dim = 10
@@ -83,7 +102,7 @@ if __name__ == "__main__":
     l2_reg = 0.01
     use_bn = True
     seed = 42
-    device = 'mps'  # in mac..
+    device = "mps"  # in mac..
 
     model = DNN(
         inputs_dim=inputs_dim,
@@ -91,7 +110,7 @@ if __name__ == "__main__":
         l2_reg=l2_reg,
         use_bn=use_bn,
         seed=seed,
-        device=device
+        device=device,
     )
 
     input_tensor = torch.randn(3, inputs_dim).to(device)
