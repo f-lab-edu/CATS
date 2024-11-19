@@ -2,7 +2,7 @@ from typing import Literal, Union
 
 import torch
 import torch.nn as nn
-from activation import activation_layer
+from .activation import activation_layer
 
 
 class DNN(nn.Module):
@@ -74,7 +74,10 @@ class DNN(nn.Module):
         return deep_input
 
 
-if __name__ == "__main__":              # python core.py
+if __name__ == "__main__":
+    """ Module for Execution in Testing
+    python -m CATS.layers.core
+    """
     inputs_dim = 10
     hidden_units = [32, 16, 3]
     l2_reg = 0.01
