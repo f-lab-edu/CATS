@@ -1,6 +1,8 @@
 from collections import OrderedDict, namedtuple
 from typing import List, Literal, Union
 
+import torch.nn as nn
+
 DEFAULT_GROUP_NAME = "default_group"
 
 
@@ -237,3 +239,48 @@ def build_input_features(
         else:
             raise TypeError(f"Invalid feature column type, got {type(feat)}")
     return features
+
+
+def create_embedding_matrix(
+    feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
+    init_std: float = 0.0001,
+    linear: bool = False,
+    sparse: bool = False,
+    device: Literal["cuda", "gpu", "mps"] = "cpu",
+) -> nn.ModuleDict:
+    """
+    Create embedding matrix. return embedding matrix {feature columns name: nn.Embedding}
+    :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+    :param init_std: initial standard deviation
+    :param linear: embedding dimension is 1
+    :param sparse: If True, the gradient by the weight matrix will be a sparse tensor.
+    :param device: cpu, cuda or mps
+    :return: embedding dictionary. {feature columns name: nn.Embedding}
+    """
+    sparse_feature_columns = (
+        list(filter(lambda x: isinstance(x, SparseFeat), feature_columns))
+        if len(feature_columns)
+        else []
+    )
+
+    varlen_sparse_feature_columns = (
+        list(filter(lambda x: isinstance(x, VarLenSparseFeat), feature_columns))
+        if len(feature_columns)
+        else []
+    )
+
+    embedding_dict = nn.ModuleDict(
+        {
+            feat.embedding_name: nn.Embedding(
+                feat.vocabulary_size,
+                feat.embeddin_dim if not linear else 1,
+                sparse=sparse,
+            )
+            for feat in sparse_feature_columns + varlen_sparse_feature_columns
+        }
+    )
+
+    for tensor in embedding_dict.values():
+        nn.init.normal_(tensor.weight, mean=0, std=init_std)
+
+    return embedding_dict.to(device)
