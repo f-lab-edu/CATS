@@ -257,17 +257,11 @@ def create_embedding_matrix(
     :param device: cpu, cuda or mps
     :return: embedding dictionary. {feature columns name: nn.Embedding}
     """
-    sparse_feature_columns = (
-        list(filter(lambda x: isinstance(x, SparseFeat), feature_columns))
-        if len(feature_columns)
-        else []
-    )
+    sparse_feature_columns = [x for x in feature_columns if isinstance(x, SparseFeat)]
 
-    varlen_sparse_feature_columns = (
-        list(filter(lambda x: isinstance(x, VarLenSparseFeat), feature_columns))
-        if len(feature_columns)
-        else []
-    )
+    varlen_sparse_feature_columns = [
+        x for x in feature_columns if isinstance(x, VarLenSparseFeat)
+    ]
 
     embedding_dict = nn.ModuleDict(
         {
