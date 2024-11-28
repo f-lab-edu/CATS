@@ -93,6 +93,44 @@ class DNN(nn.Module):
         return deep_input
 
 
+class PredictionLayer(nn.Module):
+    def __init__(
+        self,
+        task: Literal["binary", "multiclass", "regression"] = "binary",
+        use_bias: bool = True,
+    ):
+        """
+        Model output layer
+        :param task: model's task in ["binary", "multiclass", "regression"]
+        :param use_bias: using bias
+        """
+        if task not in ["binary", "multiclass", "regression"]:
+            raise ValueError("task must be binary, multiclass or regression")
+
+        super(PredictionLayer, self).__init__()
+        self.use_bias = use_bias
+        self.task = task
+        if self.use_bias:
+            self.bias = nn.Parameter(torch.zeros((1,)))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass
+        :param x: input tensors
+        :return: output tensors
+        """
+        inputs = x
+        if self.use_bias:
+            inputs += self.bias
+        if self.task == "binary":
+            outputs = torch.sigmoid(inputs)
+        elif self.task == "multiclass":
+            outputs = torch.softmax(inputs, dim=0)
+        else:
+            outputs = input
+        return outputs
+
+
 if __name__ == "__main__":
     """Module for Execution in Testing
     python -m CATS.layers.core
