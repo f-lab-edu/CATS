@@ -127,7 +127,7 @@ class PredictionLayer(nn.Module):
         elif self.task == "multiclass":
             outputs = torch.softmax(inputs, dim=0)
         else:
-            outputs = input
+            outputs = inputs
         return outputs
 
 
