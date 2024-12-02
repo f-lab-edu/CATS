@@ -116,9 +116,14 @@ class PredictionLayer(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass
-        :param x: input tensors
+        :param x: input tensors. input tensor's shape is [batch size, classes number].
         :return: output tensors
         """
+        if not isinstance(x, torch.Tensor):
+            raise TypeError(f"Expected input to be of type torch.Tensor, but got {type(x)}.")
+        if not torch.isfinite(x).all():
+            raise ValueError("Input tensor contains NaN or Inf values, which are not allowed.")
+
         inputs = x
         if self.use_bias:
             inputs += self.bias
@@ -155,7 +160,6 @@ if __name__ == "__main__":
     input_tensor = torch.randn(4, inputs_dim).to(device)
     output = model(input_tensor)
     prediction_layer = PredictionLayer("multiclass")
-    prediction_layer.to(device)
     output = prediction_layer(output)
     print("Output Tensor Shape:", output.shape)  # 출력 텐서의 형태 확인
     print("Output Tensor:", output)  # 출력 텐서 내용 확인
