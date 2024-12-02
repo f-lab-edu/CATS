@@ -2,7 +2,7 @@ from typing import Literal, Union
 
 import torch
 import torch.nn as nn
-from .activation import activation_layer
+from activation import activation_layer
 
 
 class DNN(nn.Module):
@@ -125,7 +125,7 @@ class PredictionLayer(nn.Module):
         if self.task == "binary":
             outputs = torch.sigmoid(inputs)
         elif self.task == "multiclass":
-            outputs = torch.softmax(inputs, dim=0)
+            outputs = torch.softmax(inputs, dim=-1)
         else:
             outputs = inputs
         return outputs
@@ -140,7 +140,8 @@ if __name__ == "__main__":
     l2_reg = 0.01
     use_bn = True
     seed = 42
-    device = "mps"  # in mac..
+    # device = "mps"  # in mac..
+    device = "cuda"
 
     model = DNN(
         inputs_dim=inputs_dim,
@@ -151,7 +152,10 @@ if __name__ == "__main__":
         device=device,
     )
 
-    input_tensor = torch.randn(3, inputs_dim).to(device)
+    input_tensor = torch.randn(4, inputs_dim).to(device)
     output = model(input_tensor)
+    prediction_layer = PredictionLayer("multiclass")
+    prediction_layer.to(device)
+    output = prediction_layer(output)
     print("Output Tensor Shape:", output.shape)  # 출력 텐서의 형태 확인
     print("Output Tensor:", output)  # 출력 텐서 내용 확인
