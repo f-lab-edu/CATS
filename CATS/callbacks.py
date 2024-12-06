@@ -1,3 +1,4 @@
+import logging
 import torch
 from tensorflow.keras.callbacks import EarlyStopping, History, ModelCheckpoint
 
@@ -20,14 +21,14 @@ class ModelCheckpointTorch(ModelCheckpoint):
             if self.save_best_only:
                 current = logs.get(self.monitor)
                 if current is None:
-                    print(
+                    logging.warning(
                         "Can save best model only with %s available, skipping."
                         % self.monitor
                     )
                 else:
                     if self.monitor_op(current, self.best):
                         if self.verbose > 0:
-                            print(
+                            logging.info(
                                 "Epoch %05d: %s improved from %0.5f to %0.5f,"
                                 " saving model to %s"
                                 % (
@@ -45,13 +46,13 @@ class ModelCheckpointTorch(ModelCheckpoint):
                             torch.save(self.model, file_path)
                     else:
                         if self.verbose > 0:
-                            print(
+                            logging.info(
                                 "Epoch %05d: %s did not improve from %0.5f"
                                 % (epoch + 1, self.monitor, self.best)
                             )
             else:
                 if self.verbose > 0:
-                    print("Epoch %05d: saving model to %s" % (epoch + 1, file_path))
+                    logging.info("Epoch %05d: saving model to %s" % (epoch + 1, file_path))
                 if self.save_weights_only:
                     torch.save(self.model.state_dict(), file_path)
                 else:
