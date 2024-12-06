@@ -1,4 +1,5 @@
 import logging
+
 import torch
 from tensorflow.keras.callbacks import EarlyStopping, History, ModelCheckpoint
 
@@ -52,7 +53,9 @@ class ModelCheckpointTorch(ModelCheckpoint):
                             )
             else:
                 if self.verbose > 0:
-                    logging.info("Epoch %05d: saving model to %s" % (epoch + 1, file_path))
+                    logging.info(
+                        "Epoch %05d: saving model to %s" % (epoch + 1, file_path)
+                    )
                 if self.save_weights_only:
                     torch.save(self.model.state_dict(), file_path)
                 else:
