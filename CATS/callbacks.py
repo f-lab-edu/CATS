@@ -3,9 +3,6 @@ import logging
 import torch
 from tensorflow.keras.callbacks import EarlyStopping, History, ModelCheckpoint
 
-EarlyStopping = EarlyStopping
-History = History
-
 
 class ModelCheckpointTorch(ModelCheckpoint):
     def on_epoch_end(self, epoch: int, logs: dict = None):
