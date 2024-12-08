@@ -1,9 +1,10 @@
-from typing import Literal
+from typing import List, Literal, Union
 
 import torch
 import torch.nn as nn
 
-from ..inputs import build_input_features, create_embedding_matrix
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      build_input_features, create_embedding_matrix)
 
 
 class BaseModel(nn.Module):
@@ -52,7 +53,7 @@ class BaseModel(nn.Module):
         )
 
         self.linear_model = nn.Linear(
-            self.compute_input_dim(linear_feature_columns), 1, bias=False
+            self._compute_input_dim(linear_feature_columns), 1, bias=False
         ).to(device)
 
         self.regularization_weight = []
@@ -67,3 +68,49 @@ class BaseModel(nn.Module):
         # parameters for callbacks
         self._is_graph_network = True  # used for ModelCheckpoint in tf2
         self._ckpt_saved_epoch = False  # used for EarlyStopping in tf1.14
+
+    def _compute_input_dim(
+        self,
+        feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
+        include_sparse: bool = True,
+        include_dense: bool = True,
+        feature_group: bool = False,
+    ) -> int:
+        """
+        Compute length of input dimensions.
+        :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+        :param include_sparse: true or false, include sparse feature
+        :param include_dense: true or false, include dense feature
+        :param feature_group:if True, counts sparse features as individual groups (ignoring embedding dimensions);
+                             if False, sums up embedding dimensions of sparse features
+        :return: number of total input dimensions
+        """
+        input_dim = 0
+
+        sparse_feature_columns = list(
+            filter(
+                lambda x: isinstance(x, (SparseFeat, VarLenSparseFeat)), feature_columns
+            )
+            if len(feature_columns)
+            else []
+        )
+
+        dense_feature_columns = (
+            list(filter(lambda x: isinstance(x, DenseFeat), feature_columns))
+            if len(feature_columns)
+            else []
+        )
+
+        dense_input_dim = sum(map(lambda x: x.dimension, dense_feature_columns))
+        if feature_group:
+            sparse_input_dim = len(sparse_feature_columns)
+        else:
+            sparse_input_dim = sum(
+                feat.embedding_dim for feat in sparse_feature_columns
+            )
+
+        if include_sparse:
+            input_dim += sparse_input_dim
+        if include_dense:
+            input_dim += dense_input_dim
+        return input_dim
