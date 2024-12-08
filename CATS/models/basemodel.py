@@ -3,8 +3,16 @@ from typing import List, Literal, Union
 import torch
 import torch.nn as nn
 
-from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
-                      build_input_features, create_embedding_matrix)
+from ..inputs import (
+    DenseFeat,
+    SparseFeat,
+    VarLenSparseFeat,
+    build_input_features,
+    create_embedding_matrix,
+)
+
+from ..layers import PredictionLayer
+from ..callbacks import History
 
 
 class BaseModel(nn.Module):
@@ -63,11 +71,16 @@ class BaseModel(nn.Module):
         )
         self.add_regularization_weight(self.linear_model.parameters(), l2=l2_reg_linear)
 
+        self.out = PredictionLayer(
+            task,
+        )
         self.to(device)
 
         # parameters for callbacks
         self._is_graph_network = True  # used for ModelCheckpoint in tf2
         self._ckpt_saved_epoch = False  # used for EarlyStopping in tf1.14
+
+        self.history = History()
 
     def _compute_input_dim(
         self,
