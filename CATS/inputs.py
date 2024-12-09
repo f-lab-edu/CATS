@@ -304,6 +304,19 @@ def embedding_lookup(
     """
     group_embedding = defaultdict(list)
 
+    if sparse_feature_columns is None:
+        raise ValueError(
+            "sparse_feature_columns is None. sparse_feature_columns must be list"
+        )
+    if not isinstance(sparse_feature_columns, list):
+        raise ValueError(
+            f"sparse_feature_columns is {type(sparse_feature_columns)}, sparse_feature_columns must be list."
+        )
+    if not all(isinstance(feature, SparseFeat) for feature in sparse_feature_columns):
+        raise TypeError(
+            "All elements in sparse_feature_columns must be instances of SparseFeat."
+        )
+
     for fc in sparse_feature_columns:
         feature_name = fc.name
         embedding_name = fc.embedding_name
@@ -333,6 +346,23 @@ def varlen_embedding_lookup(
     """
     varlen_embedding_vec_dict = defaultdict(list)
 
+    if varlen_sparse_feature_columns is None:
+        raise ValueError(
+            "varlen_sparse_feature_columns is None. varlen_sparse_feature_columns must be list"
+        )
+    if not isinstance(varlen_sparse_feature_columns, list):
+        raise ValueError(
+            f"varlen_sparse_feature_columns is {type(varlen_sparse_feature_columns)},"
+            f" varlen_sparse_feature_columns must be list."
+        )
+    if not all(
+        isinstance(feature, VarLenSparseFeat)
+        for feature in varlen_sparse_feature_columns
+    ):
+        raise TypeError(
+            "All elements in sparse_feature_columns must be instances of SparseFeat."
+        )
+
     for fc in varlen_sparse_feature_columns:
         feature_name = fc.name
         embedding_name = fc.sparsefeat.embedding_name
@@ -357,6 +387,20 @@ def get_dense_inputs(
     :return: dense_input_list: list of dense features in inputs
     """
     dense_input_list = list()
+
+    if dense_feature_columns is None:
+        raise ValueError(
+            "dense_feature_columns is None. dense_feature_columns must be list"
+        )
+    if not isinstance(dense_feature_columns, list):
+        raise ValueError(
+            f"dense_feature_columns is {type(dense_feature_columns)}, dense_feature_columns must be list."
+        )
+    if not all(isinstance(feature, DenseFeat) for feature in dense_feature_columns):
+        raise TypeError(
+            "All elements in dense_feature_columns must be instances of DenseFeat."
+        )
+
     for fc in dense_feature_columns:
         feature_name = fc.name
         lookup_idx = np.array(dense_input_dict[feature_name])
