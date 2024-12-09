@@ -342,3 +342,24 @@ def varlen_embedding_lookup(
             embedding_name
         ](input_tensor)
     return varlen_embedding_vec_dict
+
+
+def get_dense_inputs(
+    inputs: torch.Tensor,
+    dense_input_dict: OrderedDict[str:Tuple],
+    dense_feature_columns: List[DenseFeat],
+) -> List[torch.Tensor]:
+    """
+    Return dense matrix in inputs.
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param dense_input_dict: dense feature's indexes
+    :param dense_feature_columns: list about DenseFeat instances
+    :return: dense_input_list: list of dense features in inputs
+    """
+    dense_input_list = list()
+    for fc in dense_feature_columns:
+        feature_name = fc.name
+        lookup_idx = np.array(dense_input_dict[feature_name])
+        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].float()
+        dense_input_list.append(input_tensor)
+    return dense_input_list
