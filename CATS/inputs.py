@@ -290,7 +290,6 @@ def embedding_lookup(
     sparse_input_dict: OrderedDict[str:Tuple],
     sparse_feature_columns: List[SparseFeat],
     return_feature_list: list = (),
-    mask_feat_list: list = (),
     to_list: bool = False,
 ) -> Union[DefaultDict[str : torch.Tensor], List[torch.Tensor]]:
     """
@@ -300,7 +299,6 @@ def embedding_lookup(
     :param sparse_input_dict: sparse feature's indexes
     :param sparse_feature_columns: list about SparseFeat instances
     :param return_feature_list: names of feature to be returned, default () -> return all features
-    :param mask_feat_list: names of feature to be masked in hash transform
     :param to_list: true or false, convert list
     :return: group_embedding_dict: DefaultDict(list) or if to_list is true, list()
     """
