@@ -1,6 +1,10 @@
-from collections import OrderedDict, namedtuple
-from typing import List, Literal, Union
+import itertools
+from collections import OrderedDict, defaultdict, namedtuple
+from itertools import chain
+from typing import DefaultDict, Dict, List, Literal, Tuple, Union
 
+import numpy as np
+import torch
 import torch.nn as nn
 
 DEFAULT_GROUP_NAME = "default_group"
@@ -278,3 +282,38 @@ def create_embedding_matrix(
         nn.init.normal_(tensor.weight, mean=0, std=init_std)
 
     return embedding_dict.to(device)
+
+
+def embedding_lookup(
+    inputs: torch.Tensor,
+    sparse_embedding_dict: Dict[str : nn.Embedding],
+    sparse_input_dict: OrderedDict[str:Tuple],
+    sparse_feature_columns: List[SparseFeat],
+    return_feature_list: list = (),
+    mask_feat_list: list = (),
+    to_list: bool = False,
+) -> Union[DefaultDict[str : torch.Tensor], List[torch.Tensor]]:
+    """
+    Converts a sparse matrix to a dense matrix. Uses embedding when converting.
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param sparse_embedding_dict: embedding matrix (nn.Embedding) of sparse embedding's name
+    :param sparse_input_dict: sparse feature's indexes
+    :param sparse_feature_columns: list about SparseFeat instances
+    :param return_feature_list: names of feature to be returned, default () -> return all features
+    :param mask_feat_list: names of feature to be masked in hash transform
+    :param to_list: true or false, convert list
+    :return: group_embedding_dict: DefaultDict(list) or if to_list is true, list()
+    """
+    group_embedding = defaultdict(list)
+
+    for fc in sparse_feature_columns:
+        feature_name = fc.name
+        embedding_name = fc.embedding_name
+        if len(return_feature_list) == 0 or feature_name in return_feature_list:
+            lookup_idx = np.array(sparse_input_dict[feature_name])
+            input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long
+            embedding_tensor = sparse_embedding_dict(embedding_name)[input_tensor]
+            group_embedding[fc.group_name].append(embedding_tensor)
+    if to_list:
+        return list(chain.from_iterable(group_embedding.values()))
+    return group_embedding
