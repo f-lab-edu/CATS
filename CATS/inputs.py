@@ -315,3 +315,30 @@ def embedding_lookup(
     if to_list:
         return list(chain.from_iterable(group_embedding.values()))
     return group_embedding
+
+
+def varlen_embedding_lookup(
+    inputs: torch.Tensor,
+    varlen_sparse_embedding_dict: Dict[str : nn.Embedding],
+    varlen_input_dict: OrderedDict[str:Tuple],
+    varlen_sparse_feature_columns: List[VarLenSparseFeat],
+) -> DefaultDict[str : torch.Tensor]:
+    """
+    Converts a variance length sparse matrix to a dense matrix. Uses embedding when converting
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param varlen_sparse_embedding_dict: embedding matrix (nn.Embedding) of variance length sparse embedding's name
+    :param varlen_input_dict: variance length sparse feature's indexes
+    :param varlen_sparse_feature_columns: list about VarLenSparseFeat instances
+    :return: group_embedding_dict: DefaultDict(list)
+    """
+    varlen_embedding_vec_dict = defaultdict(list)
+
+    for fc in varlen_sparse_feature_columns:
+        feature_name = fc.name
+        embedding_name = fc.sparsefeat.embedding_name
+        lookup_idx = varlen_input_dict[feature_name]
+        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long
+        varlen_embedding_vec_dict[fc.group_name] = varlen_sparse_embedding_dict[
+            embedding_name
+        ](input_tensor)
+    return varlen_embedding_vec_dict
