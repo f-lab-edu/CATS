@@ -322,7 +322,7 @@ def embedding_lookup(
         embedding_name = fc.embedding_name
         if len(return_feature_list) == 0 or feature_name in return_feature_list:
             lookup_idx = np.array(sparse_input_dict[feature_name])
-            input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long
+            input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long()
             embedding_tensor = sparse_embedding_dict(embedding_name)[input_tensor]
             group_embedding[fc.group_name].append(embedding_tensor)
     if to_list:
@@ -367,7 +367,7 @@ def varlen_embedding_lookup(
         feature_name = fc.name
         embedding_name = fc.sparsefeat.embedding_name
         lookup_idx = varlen_input_dict[feature_name]
-        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long
+        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long()
         varlen_embedding_vec_dict[fc.group_name] = varlen_sparse_embedding_dict[
             embedding_name
         ](input_tensor)
