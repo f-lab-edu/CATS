@@ -286,12 +286,12 @@ def create_embedding_matrix(
 
 def embedding_lookup(
     inputs: torch.Tensor,
-    sparse_embedding_dict: Dict[str : nn.Embedding],
+    sparse_embedding_dict: Dict[str, nn.Embedding],
     sparse_input_dict: OrderedDict[str:Tuple],
     sparse_feature_columns: List[SparseFeat],
     return_feature_list: list = (),
     to_list: bool = False,
-) -> Union[DefaultDict[str : torch.Tensor], List[torch.Tensor]]:
+) -> Union[DefaultDict[str, torch.Tensor], List[torch.Tensor]]:
     """
     Converts a sparse matrix to a dense matrix. Uses embedding when converting.
     :param inputs: input Tensor [batch_size x hidden_dim]
@@ -332,10 +332,10 @@ def embedding_lookup(
 
 def varlen_embedding_lookup(
     inputs: torch.Tensor,
-    varlen_sparse_embedding_dict: Dict[str : nn.Embedding],
+    varlen_sparse_embedding_dict: Dict[str, nn.Embedding],
     varlen_input_dict: OrderedDict[str:Tuple],
     varlen_sparse_feature_columns: List[VarLenSparseFeat],
-) -> DefaultDict[str : torch.Tensor]:
+) -> DefaultDict[str, torch.Tensor]:
     """
     Converts a variance length sparse matrix to a dense matrix. Uses embedding when converting
     :param inputs: input Tensor [batch_size x hidden_dim]
