@@ -26,7 +26,6 @@ class BaseModel(nn.Module):
         seed: int = 1024,
         task: Literal["binary", "multiclass", "regression"] = "binary",
         device: Literal["cpu", "cuda", "mps"] = "cpu",
-        gpus: list = None,
     ):
         """
         Base model for Machine Learning Models.
@@ -38,7 +37,6 @@ class BaseModel(nn.Module):
         :param seed: random seed value
         :param task: object task
         :param device: target device
-        :param gpus: list of gpus id
         """
         super(BaseModel, self).__init__()
         torch.manual_seed(seed)
@@ -47,9 +45,6 @@ class BaseModel(nn.Module):
         self.reg_loss = torch.zeros((1,), device=device)
         self.aux_loss = torch.zeros((1,), device=device)
         self.device = device
-        self.gpus = gpus
-        if gpus and str(self.gpus[0]) not in self.device:
-            raise ValueError(f"{gpus[0]} should be the same gpu with {device}")
 
         self.feature_index = build_input_features(
             linear_feature_columns + dnn_feature_columns
