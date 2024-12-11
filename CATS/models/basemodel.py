@@ -33,7 +33,7 @@ class BaseModel(nn.Module):
         :param linear_feature_columns: list of features attributes for linear model.
         :param dnn_feature_columns: list of features attributes for dnn model.
         :param l2_reg_linear: L2 regularization for linear features
-        :param l2_reg_embedding: L2 regularization for embeddin features
+        :param l2_reg_embedding: L2 regularization for embedding features
         :param init_std: initialize standard deviation
         :param seed: random seed value
         :param task: object task
