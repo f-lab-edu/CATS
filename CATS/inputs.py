@@ -1,6 +1,10 @@
-from collections import OrderedDict, namedtuple
-from typing import List, Literal, Union
+import itertools
+from collections import OrderedDict, defaultdict, namedtuple
+from itertools import chain
+from typing import DefaultDict, Dict, List, Literal, Tuple, Union
 
+import numpy as np
+import torch
 import torch.nn as nn
 
 DEFAULT_GROUP_NAME = "default_group"
@@ -278,3 +282,128 @@ def create_embedding_matrix(
         nn.init.normal_(tensor.weight, mean=0, std=init_std)
 
     return embedding_dict.to(device)
+
+
+def embedding_lookup(
+    inputs: torch.Tensor,
+    sparse_embedding_dict: Dict[str, nn.Embedding],
+    sparse_input_dict: OrderedDict[str:Tuple],
+    sparse_feature_columns: List[SparseFeat],
+    return_feature_list: list = (),
+    to_list: bool = False,
+) -> Union[DefaultDict[str, torch.Tensor], List[torch.Tensor]]:
+    """
+    Converts a sparse matrix to a dense matrix. Uses embedding when converting.
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param sparse_embedding_dict: embedding matrix (nn.Embedding) of sparse embedding's name
+    :param sparse_input_dict: sparse feature's indexes
+    :param sparse_feature_columns: list about SparseFeat instances
+    :param return_feature_list: names of feature to be returned, default () -> return all features
+    :param to_list: true or false, convert list
+    :return: group_embedding_dict: DefaultDict(list) or if to_list is true, list()
+    """
+    group_embedding = defaultdict(list)
+
+    if sparse_feature_columns is None:
+        raise ValueError(
+            "sparse_feature_columns is None. sparse_feature_columns must be list"
+        )
+    if not isinstance(sparse_feature_columns, list):
+        raise ValueError(
+            f"sparse_feature_columns is {type(sparse_feature_columns)}, sparse_feature_columns must be list."
+        )
+    if not all(isinstance(feature, SparseFeat) for feature in sparse_feature_columns):
+        raise TypeError(
+            "All elements in sparse_feature_columns must be instances of SparseFeat."
+        )
+
+    for fc in sparse_feature_columns:
+        feature_name = fc.name
+        embedding_name = fc.embedding_name
+        if len(return_feature_list) == 0 or feature_name in return_feature_list:
+            lookup_idx = np.array(sparse_input_dict[feature_name])
+            input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long()
+            embedding_tensor = sparse_embedding_dict(embedding_name)[input_tensor]
+            group_embedding[fc.group_name].append(embedding_tensor)
+    if to_list:
+        return list(chain.from_iterable(group_embedding.values()))
+    return group_embedding
+
+
+def varlen_embedding_lookup(
+    inputs: torch.Tensor,
+    varlen_sparse_embedding_dict: Dict[str, nn.Embedding],
+    varlen_input_dict: OrderedDict[str:Tuple],
+    varlen_sparse_feature_columns: List[VarLenSparseFeat],
+) -> DefaultDict[str, torch.Tensor]:
+    """
+    Converts a variance length sparse matrix to a dense matrix. Uses embedding when converting
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param varlen_sparse_embedding_dict: embedding matrix (nn.Embedding) of variance length sparse embedding's name
+    :param varlen_input_dict: variance length sparse feature's indexes
+    :param varlen_sparse_feature_columns: list about VarLenSparseFeat instances
+    :return: group_embedding_dict: DefaultDict(list)
+    """
+    varlen_embedding_vec_dict = defaultdict(list)
+
+    if varlen_sparse_feature_columns is None:
+        raise ValueError(
+            "varlen_sparse_feature_columns is None. varlen_sparse_feature_columns must be list"
+        )
+    if not isinstance(varlen_sparse_feature_columns, list):
+        raise ValueError(
+            f"varlen_sparse_feature_columns is {type(varlen_sparse_feature_columns)},"
+            f" varlen_sparse_feature_columns must be list."
+        )
+    if not all(
+        isinstance(feature, VarLenSparseFeat)
+        for feature in varlen_sparse_feature_columns
+    ):
+        raise TypeError(
+            "All elements in sparse_feature_columns must be instances of SparseFeat."
+        )
+
+    for fc in varlen_sparse_feature_columns:
+        feature_name = fc.name
+        embedding_name = fc.sparsefeat.embedding_name
+        lookup_idx = varlen_input_dict[feature_name]
+        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].long()
+        varlen_embedding_vec_dict[fc.group_name] = varlen_sparse_embedding_dict[
+            embedding_name
+        ](input_tensor)
+    return varlen_embedding_vec_dict
+
+
+def get_dense_inputs(
+    inputs: torch.Tensor,
+    dense_input_dict: OrderedDict[str:Tuple],
+    dense_feature_columns: List[DenseFeat],
+) -> List[torch.Tensor]:
+    """
+    Return dense matrix in inputs.
+    :param inputs: input Tensor [batch_size x hidden_dim]
+    :param dense_input_dict: dense feature's indexes
+    :param dense_feature_columns: list about DenseFeat instances
+    :return: dense_input_list: list of dense features in inputs
+    """
+    dense_input_list = list()
+
+    if dense_feature_columns is None:
+        raise ValueError(
+            "dense_feature_columns is None. dense_feature_columns must be list"
+        )
+    if not isinstance(dense_feature_columns, list):
+        raise ValueError(
+            f"dense_feature_columns is {type(dense_feature_columns)}, dense_feature_columns must be list."
+        )
+    if not all(isinstance(feature, DenseFeat) for feature in dense_feature_columns):
+        raise TypeError(
+            "All elements in dense_feature_columns must be instances of DenseFeat."
+        )
+
+    for fc in dense_feature_columns:
+        feature_name = fc.name
+        lookup_idx = np.array(dense_input_dict[feature_name])
+        input_tensor = inputs[:, lookup_idx[0] : lookup_idx[1]].float()
+        dense_input_list.append(input_tensor)
+    return dense_input_list
