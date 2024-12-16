@@ -1,9 +1,11 @@
 from collections import OrderedDict
-from typing import List, Union, Literal, Tuple
+from typing import List, Literal, Tuple, Union
 
 import torch
 import torch.nn as nn
-from ..inputs import SparseFeat, VarLenSparseFeat, DenseFeat, create_embedding_matrix
+
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      create_embedding_matrix)
 
 
 class Linear(nn.Module):
@@ -30,8 +32,8 @@ class Linear(nn.Module):
                 f"feature_columns is {type(feature_columns)}, feature_columns must be list."
             )
         if not all(
-                isinstance(feature, (SparseFeat, DenseFeat, VarLenSparseFeat))
-                for feature in feature_columns
+            isinstance(feature, (SparseFeat, DenseFeat, VarLenSparseFeat))
+            for feature in feature_columns
         ):
             raise TypeError(
                 "All elements in feature_columns must be instances of SparseFeat, DenseFeat or VarLenSparseFeat."
