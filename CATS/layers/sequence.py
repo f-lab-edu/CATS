@@ -30,8 +30,11 @@ class SequencePoolingLayer(nn.Module):
         self.to(device)
 
     def _sequence_mask(
-        self, lengths: torch.Tensor, max_len: int = None, dtype: type = torch.bool
-    ):
+        self,
+        lengths: torch.Tensor,
+        max_len: int = None,
+        dtype: torch.dtype = torch.bool,
+    ) -> torch.Tensor:
         """
         Generate sequence mask. sequence mask's length is max_len.
         :param lengths: Tensor containing lengths of features
@@ -44,7 +47,7 @@ class SequencePoolingLayer(nn.Module):
         row_vector = torch.arange(0, max_len, 1).to(lengths.device)
         matrix = torch.unsqueeze(lengths, dim=-1)
         mask = row_vector < matrix
-        mask.type(dtype)
+        mask = mask.type(dtype)
         return mask
 
     def forward(self, seq_value_len_list: list) -> torch.Tensor:
@@ -57,7 +60,7 @@ class SequencePoolingLayer(nn.Module):
             seq_embed_list, mask = seq_value_len_list
             mask = mask.float()
             user_behavior_length = torch.sum(mask, dim=-1, keepdim=True)
-            mask = mask.unsqeeze(2)
+            mask = mask.unsqueeze(2)
         else:
             seq_embed_list, user_behavior_length = seq_value_len_list
             mask = self._sequence_mask(
