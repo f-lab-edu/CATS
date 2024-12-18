@@ -46,3 +46,38 @@ class SequencePoolingLayer(nn.Module):
         mask = row_vector < matrix
         mask.type(dtype)
         return mask
+
+    def forward(self, seq_value_len_list: list) -> torch.Tensor:
+        """
+        feed forward SequencePoolingLayer. return pooling results tensor sequence.
+        :param seq_value_len_list: list in sequence embedding and mask or user_behavior_length
+        :return: hist: pooling result sequence
+        """
+        if self.supports_masking:
+            seq_embed_list, mask = seq_value_len_list
+            mask = mask.float()
+            user_behavior_length = torch.sum(mask, dim=-1, keepdim=True)
+            mask = mask.unsqeeze(2)
+        else:
+            seq_embed_list, user_behavior_length = seq_value_len_list
+            mask = self._sequence_mask(
+                user_behavior_length,
+                max_len=seq_embed_list.shape[1],
+                dtype=torch.float32,
+            )
+            mask = torch.transpose(mask, 1, 2)
+
+        embedding_size = seq_embed_list.shape[-1]
+        mask = torch.repeat_interleave(mask, embedding_size, dim=2)
+        if self.mode == "max":
+            hist = seq_embed_list - (1 - mask) * 1e9
+            hist = torch.max(hist, dim=1, keepdim=True)[0]
+            return hist
+        hist = seq_embed_list * mask.float()
+        hist = torch.sum(hist, dim=1, keepdim=False)
+
+        if self.mode == "mean":
+            self.eps = self.eps.to(user_behavior_length.device)
+            hist = torch.div(hist, user_behavior_length.type(torch.float32) + self.eps)
+        hist = torch.unsqueeze(hist, dim=1)
+        return hist
