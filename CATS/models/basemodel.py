@@ -151,7 +151,7 @@ class BaseModel(nn.Module):
         self, loss: Literal["binary_cross_entropy", "mse_loss", "mae"]
     ) -> Callable:
         """
-        Get loss function.
+        Get single loss function.
         :param loss: str, loss function name in ["binary_cross_entropy", "mse_loss", "mae"]
         :return: loss_func: Callable. loss function
         """
