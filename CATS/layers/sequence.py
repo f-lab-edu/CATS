@@ -56,19 +56,24 @@ class SequencePoolingLayer(nn.Module):
         :param seq_value_len_list: list in sequence embedding and mask or user_behavior_length
         :return: hist: pooling result sequence
         """
+        if len(seq_value_len_list[0].shape) != 3:
+            raise ValueError(
+                "Expected seq_value_len_list[0] tensor to have 3 dimensions, but got "
+                + str(len(seq_value_len_list[0].shape))
+            )
+        if len(seq_value_len_list[1].shape) != 2:
+            raise ValueError(
+                "Expected seq_value_len_list[1] tensor to have 2 dimensions, but got "
+                + str(len(seq_value_len_list[1].shape))
+            )
+        
         if self.supports_masking:
             seq_embed_list, mask = seq_value_len_list
-            if len(seq_embed_list.shape) != 3:
-                raise ValueError(
-                    "Expected seq_embed_list tensor to have 3 dimensions, but got " + str(len(seq_embed_list.shape)))
             mask = mask.float()
             user_behavior_length = torch.sum(mask, dim=-1, keepdim=True)
             mask = mask.unsqueeze(2)
         else:
             seq_embed_list, user_behavior_length = seq_value_len_list
-            if len(seq_embed_list.shape) != 3:
-                raise ValueError(
-                    "Expected seq_embed_list tensor to have 3 dimensions, but got " + str(len(seq_embed_list.shape)))
             mask = self._sequence_mask(
                 user_behavior_length,
                 max_len=seq_embed_list.shape[1],
