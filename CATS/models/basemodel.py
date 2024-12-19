@@ -1,7 +1,8 @@
-from typing import List, Literal, Union
+from typing import Callable, List, Literal, Union
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from ..callbacks import History
 from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
@@ -140,3 +141,21 @@ class BaseModel(nn.Module):
         elif isinstance(optimizer, torch.optim.Optimizer):
             optim = optimizer
         return optim
+
+    def _get_loss_func_single(
+        self, loss: Literal["binary_cross_entropy", "mse_loss", "mae"]
+    ) -> Callable:
+        """
+        Get loss function.
+        :param loss: str, loss function name in ["binary_cross_entropy", "mse_loss", "mae"]
+        :return: loss_func: Callable. loss function
+        """
+        if loss == "binary_cross_entropy":
+            loss_func = F.binary_cross_entropy
+        elif loss == "mse_loss":
+            loss_func = F.mse_loss
+        elif loss == "mae":
+            loss_func = F.l1_loss
+        else:
+            raise NotImplementedError(f"{loss} is not implemented")
+        return loss_func
