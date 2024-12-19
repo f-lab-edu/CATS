@@ -5,8 +5,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ..callbacks import History
-from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
-                      build_input_features, create_embedding_matrix)
+from ..inputs import (
+    DenseFeat,
+    SparseFeat,
+    VarLenSparseFeat,
+    build_input_features,
+    create_embedding_matrix,
+)
 from ..layers import PredictionLayer
 
 
@@ -158,4 +163,25 @@ class BaseModel(nn.Module):
             loss_func = F.l1_loss
         else:
             raise NotImplementedError(f"{loss} is not implemented")
+        return loss_func
+
+    def _get_loss_func(
+        self,
+        loss: Union[
+            List[Literal["binary_cross_entropy", "mse_loss", "mae"]],
+            Literal["binary_cross_entropy", "mse_loss", "mae"],
+            Callable,
+        ],
+    ) -> Union[List[Callable], Callable]:
+        """
+        Get loss function.
+        :param loss: loss function's name or loss function's name list, loss function
+        :return: loss_func: loss function or loss functions
+        """
+        if isinstance(loss, str):
+            loss_func = self._get_loss_func_single(loss)
+        elif isinstance(loss, list):
+            loss_func = [self._get_loss_func_single(loss_name) for loss_name in loss]
+        else:
+            loss_func = loss
         return loss_func
