@@ -3,16 +3,10 @@ from typing import List, Literal, Union
 import torch
 import torch.nn as nn
 
-from ..inputs import (
-    DenseFeat,
-    SparseFeat,
-    VarLenSparseFeat,
-    build_input_features,
-    create_embedding_matrix,
-)
-
-from ..layers import PredictionLayer
 from ..callbacks import History
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      build_input_features, create_embedding_matrix)
+from ..layers import PredictionLayer
 
 
 class BaseModel(nn.Module):
@@ -65,9 +59,7 @@ class BaseModel(nn.Module):
         )
         self.add_regularization_weight(self.linear_model.parameters(), l2=l2_reg_linear)
 
-        self.out = PredictionLayer(
-            task,
-        )
+        self.out = PredictionLayer(task)
         self.to(device)
 
         # parameters for callbacks
@@ -121,3 +113,30 @@ class BaseModel(nn.Module):
         if include_dense:
             input_dim += dense_input_dim
         return input_dim
+
+    def _get_optim(
+        self,
+        optimizer: Union[
+            Literal["sgd", "adam", "adagrad", "rmsprop"], torch.optim.Optimizer
+        ],
+    ) -> torch.optim.Optimizer:
+        """
+        Get optimizer.
+        :param optimizer: optimizer name or optimizer instance
+        :return: optim: torch.optim.Optimizer instance
+        """
+        optim = None
+        if isinstance(optimizer, str):
+            if optimizer == "sgd":
+                optim = torch.optim.SGD(self.parameters(), lr=0.01)
+            elif optimizer == "adam":
+                optim = torch.optim.Adam(self.parameters())
+            elif optimizer == "adagrad":
+                optim = torch.optim.Adagrad(self.parameters())
+            elif optimizer == "rmsprop":
+                optim = torch.optim.RMSprop(self.parameters())
+            else:
+                raise NotImplementedError(f"{optimizer} is not implemented")
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            optim = optimizer
+        return optim
