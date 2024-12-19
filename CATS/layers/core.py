@@ -2,7 +2,7 @@ from typing import Literal, Union
 
 import torch
 import torch.nn as nn
-from activation import activation_layer
+from .activation import activation_layer
 
 
 class DNN(nn.Module):
