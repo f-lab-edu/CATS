@@ -1,17 +1,14 @@
 from typing import Callable, List, Literal, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.metrics import *
 
 from ..callbacks import History
-from ..inputs import (
-    DenseFeat,
-    SparseFeat,
-    VarLenSparseFeat,
-    build_input_features,
-    create_embedding_matrix,
-)
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      build_input_features, create_embedding_matrix)
 from ..layers import PredictionLayer
 
 
@@ -185,3 +182,35 @@ class BaseModel(nn.Module):
         else:
             loss_func = loss
         return loss_func
+
+    @staticmethod
+    def _accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+        Return accuracy_score function
+        :param y_true: numpy array of true target values
+        :param y_pred: numpy array of predicted target values
+        :return: float representing the accuracy score of the predictions
+        """
+        return accuracy_score(y_true, np.where(y_pred > 0.5, 1, 0))
+
+    def get_metrics(self, metrics: List[str]) -> dict:
+        """
+        Get logging metrics dictionary. {dict_name: Callable}
+        :param metrics: logging metrics list
+        :return: metrics_dict: dictionary for metrics
+        """
+        metrics_dict = {}
+        if metrics:
+            for metric in metrics:
+                if metric == "log_loss":
+                    metrics_dict[metric] = log_loss
+                elif metric == "auc":
+                    metrics_dict[metric] = roc_auc_score
+                elif metric == "mse":
+                    metrics_dict[metric] = mean_squared_error
+                elif metric == "acc":
+                    metrics_dict[metric] = self._accuracy_score
+                else:
+                    raise NotImplementedError(f"{metric} is not implemented")
+                self.metrics_names.append(metric)
+        return metrics_dict
