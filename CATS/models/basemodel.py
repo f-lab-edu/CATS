@@ -7,8 +7,13 @@ import torch.nn.functional as F
 from sklearn.metrics import *
 
 from ..callbacks import History
-from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
-                      build_input_features, create_embedding_matrix)
+from ..inputs import (
+    DenseFeat,
+    SparseFeat,
+    VarLenSparseFeat,
+    build_input_features,
+    create_embedding_matrix,
+)
 from ..layers import PredictionLayer
 
 
@@ -70,6 +75,29 @@ class BaseModel(nn.Module):
         self._ckpt_saved_epoch = False  # used for EarlyStopping in tf1.14
 
         self.history = History()
+
+    def compile(
+        self,
+        optimizer: Union[
+            Literal["sgd", "adam", "adagrad", "rmsprop"], torch.optim.Optimizer
+        ],
+        loss: Union[
+            List[Literal["binary_cross_entropy", "mse_loss", "mae"]],
+            Literal["binary_cross_entropy", "mse_loss", "mae"],
+            Callable,
+        ],
+        metrics: List[Literal["log_loss", "auc", "mse", "acc"]],
+    ):
+        """
+        :param optimizer: the optimizer to use for training
+        :param loss: the loss function to use for training
+        :param metrics: a list of metrics to evaluate during training
+        :return:
+        """
+        self.metrics_names = ["loss"]
+        self.optim = self._get_optim(optimizer)
+        self.loss_func = self._get_loss_func(loss)
+        self.metrics = self._get_metrics(metrics)
 
     def _compute_input_dim(
         self,
