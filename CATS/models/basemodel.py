@@ -221,7 +221,9 @@ class BaseModel(nn.Module):
         """
         return accuracy_score(y_true, np.where(y_pred > 0.5, 1, 0))
 
-    def _get_metrics(self, metrics: List[str]) -> dict:
+    def _get_metrics(
+        self, metrics: List[Literal["log_loss", "auc", "mse", "acc"]]
+    ) -> dict:
         """
         Get logging metrics dictionary. {dict_name: Callable}
         :param metrics: logging metrics list
