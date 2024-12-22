@@ -20,7 +20,7 @@ cd CATS
 ```bash
 poetry install
 ```
-4. 가상환경 활성화
+3. 가상환경 활성화
 ```bash
 poetry shell
 ```
