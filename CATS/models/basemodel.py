@@ -7,13 +7,8 @@ import torch.nn.functional as F
 from sklearn.metrics import *
 
 from ..callbacks import History
-from ..inputs import (
-    DenseFeat,
-    SparseFeat,
-    VarLenSparseFeat,
-    build_input_features,
-    create_embedding_matrix,
-)
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      build_input_features, create_embedding_matrix)
 from ..layers import PredictionLayer
 
 
