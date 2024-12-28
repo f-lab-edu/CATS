@@ -15,12 +15,16 @@ CATS(Commend Advertising Targeting System)는 머신러닝 기반의 광고 추�
 git clone https://github.com/f-lab-edu/CATS.git
 cd CATS
 ```
+2. poetry 설치
+```bash
+pipx install poetry==1.8.5
+```
 
-2. 프로젝트 의존성 설치
+3. 프로젝트 의존성 설치
 ```bash
 poetry install
 ```
-3. 가상환경 활성화
+4. 가상환경 활성화
 ```bash
 poetry shell
 ```
