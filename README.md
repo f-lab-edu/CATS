@@ -5,6 +5,10 @@ CATS
 
 CATS(Commend Advertising Targeting System)는 머신러닝 기반의 광고 추천 시스템입니다.
 
+웹서버에 사용자와 관련성이 있는 광고를 추천하여 사용자에게 유용한 광고를 보여주고 좀 더 높은 CTR을 얻기 위한 시스템입니다. 
+
+자세한 구현 내용은 PR에서 확인할 수 있습니다. 추후, 프로젝트의 전체구조 및 기술적인 문제에 대한 해결방법은 README와 WIKI에 추가하도록 하겠습니다.
+
 ## 프로젝트의 전체 구조
  
  - Comming soon!
@@ -28,3 +32,6 @@ poetry install
 ```bash
 poetry shell
 ```
+
+## 사용 기술 및 환경
+Python, Pytorch, Tensorflow
