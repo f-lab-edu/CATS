@@ -207,8 +207,12 @@ class BaseModel(nn.Module):
             loss_func = self._get_loss_func_single(loss)
         elif isinstance(loss, list):
             loss_func = [self._get_loss_func_single(loss_name) for loss_name in loss]
-        else:
+        elif callable(loss):
             loss_func = loss
+        else:
+            raise ValueError(
+                "Invalid type for loss. Expected a string, a list of strings, or a callable function."
+            )
         return loss_func
 
     @staticmethod
