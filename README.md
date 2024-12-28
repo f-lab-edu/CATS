@@ -12,7 +12,7 @@ CATS(Commend Advertising Targeting System)는 머신러닝 기반의 광고 추�
 ## 개발 및 실행 환경 구축
 1. git repository clone
 ```bash
-git clone https://github.com/f-lab-edu/CATS.git
+gh repo clone f-lab-edu/CATS
 cd CATS
 ```
 2. poetry 설치
