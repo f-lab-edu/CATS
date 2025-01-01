@@ -1,18 +1,15 @@
-from typing import List, Literal, Union
+from typing import Callable, List, Literal, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from sklearn.metrics import *
 
-from ..inputs import (
-    DenseFeat,
-    SparseFeat,
-    VarLenSparseFeat,
-    build_input_features,
-    create_embedding_matrix,
-)
-
-from ..layers import PredictionLayer
 from ..callbacks import History
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      build_input_features, create_embedding_matrix)
+from ..layers import PredictionLayer
 
 
 class BaseModel(nn.Module):
@@ -65,9 +62,7 @@ class BaseModel(nn.Module):
         )
         self.add_regularization_weight(self.linear_model.parameters(), l2=l2_reg_linear)
 
-        self.out = PredictionLayer(
-            task,
-        )
+        self.out = PredictionLayer(task)
         self.to(device)
 
         # parameters for callbacks
@@ -75,6 +70,29 @@ class BaseModel(nn.Module):
         self._ckpt_saved_epoch = False  # used for EarlyStopping in tf1.14
 
         self.history = History()
+
+    def compile(
+        self,
+        optimizer: Union[
+            Literal["sgd", "adam", "adagrad", "rmsprop"], torch.optim.Optimizer
+        ],
+        loss: Union[
+            List[Literal["binary_cross_entropy", "mse_loss", "mae"]],
+            Literal["binary_cross_entropy", "mse_loss", "mae"],
+            Callable,
+        ],
+        metrics: List[Literal["log_loss", "auc", "mse", "acc"]],
+    ):
+        """
+        :param optimizer: the optimizer to use for training
+        :param loss: the loss function to use for training
+        :param metrics: a list of metrics to evaluate during training
+        :return:
+        """
+        self.metrics_names = ["loss"]
+        self.optim = self._get_optim(optimizer)
+        self.loss_func = self._get_loss_func(loss)
+        self.metrics = self._get_metrics(metrics)
 
     def _compute_input_dim(
         self,
@@ -121,3 +139,107 @@ class BaseModel(nn.Module):
         if include_dense:
             input_dim += dense_input_dim
         return input_dim
+
+    def _get_optim(
+        self,
+        optimizer: Union[
+            Literal["sgd", "adam", "adagrad", "rmsprop"], torch.optim.Optimizer
+        ],
+    ) -> torch.optim.Optimizer:
+        """
+        Get optimizer.
+        :param optimizer: optimizer name or optimizer instance
+        :return: optim: torch.optim.Optimizer instance
+        """
+        optim = None
+        if isinstance(optimizer, str):
+            if optimizer == "sgd":
+                optim = torch.optim.SGD(self.parameters(), lr=0.01)
+            elif optimizer == "adam":
+                optim = torch.optim.Adam(self.parameters())
+            elif optimizer == "adagrad":
+                optim = torch.optim.Adagrad(self.parameters())
+            elif optimizer == "rmsprop":
+                optim = torch.optim.RMSprop(self.parameters())
+            else:
+                raise NotImplementedError(f"{optimizer} is not implemented")
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            optim = optimizer
+        return optim
+
+    def _get_loss_func_single(
+        self, loss: Literal["binary_cross_entropy", "mse_loss", "mae"]
+    ) -> Callable:
+        """
+        Get single loss function.
+        :param loss: str, loss function name in ["binary_cross_entropy", "mse_loss", "mae"]
+        :return: loss_func: Callable. loss function
+        """
+        if loss == "binary_cross_entropy":
+            loss_func = F.binary_cross_entropy
+        elif loss == "mse_loss":
+            loss_func = F.mse_loss
+        elif loss == "mae":
+            loss_func = F.l1_loss
+        else:
+            raise NotImplementedError(f"{loss} is not implemented")
+        return loss_func
+
+    def _get_loss_func(
+        self,
+        loss: Union[
+            List[Literal["binary_cross_entropy", "mse_loss", "mae"]],
+            Literal["binary_cross_entropy", "mse_loss", "mae"],
+            Callable,
+        ],
+    ) -> Union[List[Callable], Callable]:
+        """
+        Get loss function.
+        :param loss: loss function's name or loss function's name list, loss function
+        :return: loss_func: loss function or loss functions
+        """
+        if isinstance(loss, str):
+            loss_func = self._get_loss_func_single(loss)
+        elif isinstance(loss, list):
+            loss_func = [self._get_loss_func_single(loss_name) for loss_name in loss]
+        elif callable(loss):
+            loss_func = loss
+        else:
+            raise ValueError(
+                "Invalid type for loss. Expected a string, a list of strings, or a callable function."
+            )
+        return loss_func
+
+    @staticmethod
+    def _accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+        Return accuracy_score function
+        :param y_true: numpy array of true target values
+        :param y_pred: numpy array of predicted target values
+        :return: float representing the accuracy score of the predictions
+        """
+        return accuracy_score(y_true, np.where(y_pred > 0.5, 1, 0))
+
+    def _get_metrics(
+        self, metrics: List[Literal["log_loss", "auc", "mse", "acc"]]
+    ) -> dict:
+        """
+        Get logging metrics dictionary. {dict_name: Callable}
+        :param metrics: logging metrics list
+        :return: metrics_dict: dictionary for metrics
+        """
+        metrics_dict = {}
+        if metrics:
+            for metric in metrics:
+                if metric == "log_loss":
+                    metrics_dict[metric] = log_loss
+                elif metric == "auc":
+                    metrics_dict[metric] = roc_auc_score
+                elif metric == "mse":
+                    metrics_dict[metric] = mean_squared_error
+                elif metric == "acc":
+                    metrics_dict[metric] = self._accuracy_score
+                else:
+                    raise NotImplementedError(f"{metric} is not implemented")
+                self.metrics_names.append(metric)
+        return metrics_dict
