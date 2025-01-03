@@ -258,3 +258,27 @@ class BaseModel(nn.Module):
         """
         weight_list = [weight_list]
         self.regularization_weight.append((weight_list, l1, l2))
+
+    def get_regularization_loss(self) -> torch.Tensor:
+        """
+        This function calculates and returns the total regularization loss for all the parameters
+        (weights) previously added through 'add_regularization_weight' method.
+        :return: torch.Tensor. The total regularization loss
+        """
+        total_reg_loss = torch.zeros((1,), device=self.device)
+        for weight_list, l1, l2 in self.regularization_weight:
+            for w in weight_list:
+                if isinstance(w, tuple):
+                    parameter = w[1]
+                else:
+                    parameter = w
+                if l1 > 0:
+                    total_reg_loss += torch.sum(l1 * torch.abs(parameter))
+
+                if l2 > 0:
+                    try:
+                        total_reg_loss += torch.sum(l2 * torch.square(parameter))
+                    except AttributeError:
+                        total_reg_loss += torch.sum(l2 * parameter * parameter)
+
+        return total_reg_loss
