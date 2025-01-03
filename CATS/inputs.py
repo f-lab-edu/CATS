@@ -271,7 +271,7 @@ def create_embedding_matrix(
         {
             feat.embedding_name: nn.Embedding(
                 feat.vocabulary_size,
-                feat.embedding_dim if not linear else 1,
+                feat.embeddin_dim if not linear else 1,
                 sparse=sparse,
             )
             for feat in sparse_feature_columns + varlen_sparse_feature_columns

@@ -11,8 +11,6 @@ tensorflow = "2.6.0"
 torch = "1.13.1"
 scikit-learn = "1.1.3"
 pandas = "1.1.5"
-keras = "2.6.0"
-protobuf = "3.20.1"
 
 
 [tool.poetry.group.dev.dependencies]
