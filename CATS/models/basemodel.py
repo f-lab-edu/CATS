@@ -121,8 +121,9 @@ class BaseModel(nn.Module):
                     split_at = int(x[0].shape[0] * (1. - validation_split))
                 else:
                     split_at = int(len(x[0]) * (1. - validation_split))
-                x, val_x = x[:split_at], x[split_at:]
+                x, val_x = [x_v[:split_at] for x_v in x], [x_v[split_at:] for x_v in x]
                 y, val_y = y[:split_at], y[split_at:]
+                y = np.asarray(y)
         else:
             val_x = []
             val_y = []
