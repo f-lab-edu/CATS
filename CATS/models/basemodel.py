@@ -1,4 +1,4 @@
-from typing import Callable, List, Literal, Union
+from typing import Callable, Iterator, List, Literal, Union
 
 import numpy as np
 import torch
@@ -243,3 +243,18 @@ class BaseModel(nn.Module):
                     raise NotImplementedError(f"{metric} is not implemented")
                 self.metrics_names.append(metric)
         return metrics_dict
+
+    def add_regularization_weight(
+        self,
+        weight_list: Iterator[torch.nn.parameter.Parameter],
+        l1: float = 0.0,
+        l2: float = 0.0,
+    ):
+        """
+        This function is used to add L1 and L2 regularization to the given set of weights.
+        :param weight_list: A list of parameters (weights) to which regularization will be added.
+        :param l1: The lambda value determining the strength of L1 regularization.
+        :param l2: The lambda value determining the strength of L2 regularization.
+        """
+        weight_list = [weight_list]
+        self.regularization_weight.append((weight_list, l1, l2))
