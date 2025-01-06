@@ -1,4 +1,4 @@
-from typing import Callable, List, Literal, Union
+from typing import Callable, List, Literal, Tuple, Union
 
 import numpy as np
 import torch
@@ -8,7 +8,8 @@ from sklearn.metrics import *
 
 from ..callbacks import History
 from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
-                      build_input_features, create_embedding_matrix)
+                      build_input_features, create_embedding_matrix,
+                      embedding_lookup, get_dense_inputs)
 from ..layers import PredictionLayer
 
 
@@ -243,3 +244,34 @@ class BaseModel(nn.Module):
                     raise NotImplementedError(f"{metric} is not implemented")
                 self.metrics_names.append(metric)
         return metrics_dict
+
+    def input_from_feature_columns(
+        self, inputs: torch.Tensor, feature_columns: List[Union[SparseFeat, DenseFeat]]
+    ) -> Tuple[List, List]:
+        """
+        Get input data from feature columns.
+        :param inputs: input tensor
+        :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+        :return: sparse embedding value list and dense input value list
+        """
+
+        sparse_feature_columns = (
+            list(filter(lambda x: isinstance(x, SparseFeat), feature_columns))
+            if len(feature_columns)
+            else []
+        )
+        dense_feature_columns = (
+            list(filter(lambda x: isinstance(x, DenseFeat), feature_columns))
+            if len(feature_columns)
+            else []
+        )
+
+        sparse_embedding_list = embedding_lookup(
+            inputs, self.embedding_dict, self.feature_index, sparse_feature_columns
+        )
+
+        dense_value_list = get_dense_inputs(
+            inputs, self.feature_index, dense_feature_columns
+        )
+
+        return sparse_embedding_list, dense_value_list
