@@ -1,4 +1,4 @@
-from typing import Callable, Iterator, List, Literal, Union
+from typing import Callable, Iterable, List, Literal, Union
 
 import numpy as np
 import torch
@@ -246,7 +246,7 @@ class BaseModel(nn.Module):
 
     def add_regularization_weight(
         self,
-        weight_list: Iterator[torch.nn.parameter.Parameter],
+        weight_list: Iterable[torch.nn.parameter.Parameter],
         l1: float = 0.0,
         l2: float = 0.0,
     ):
