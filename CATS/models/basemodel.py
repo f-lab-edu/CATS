@@ -1,6 +1,7 @@
+
 import logging
 import time
-from typing import Callable, Dict, List, Literal, Union
+from typing import Callable, Dict, Iterable, List, Literal, Union
 
 import numpy as np
 import torch
@@ -418,3 +419,42 @@ class BaseModel(nn.Module):
                     raise NotImplementedError(f"{metric} is not implemented")
                 self.metrics_names.append(metric)
         return metrics_dict
+
+    def add_regularization_weight(
+        self,
+        weight_list: Iterable[torch.nn.parameter.Parameter],
+        l1: float = 0.0,
+        l2: float = 0.0,
+    ):
+        """
+        This function is used to add L1 and L2 regularization to the given set of weights.
+        :param weight_list: A list of parameters (weights) to which regularization will be added.
+        :param l1: The lambda value determining the strength of L1 regularization.
+        :param l2: The lambda value determining the strength of L2 regularization.
+        """
+        weight_list = [weight_list]
+        self.regularization_weight.append((weight_list, l1, l2))
+
+    def get_regularization_loss(self) -> torch.Tensor:
+        """
+        This function calculates and returns the total regularization loss for all the parameters
+        (weights) previously added through 'add_regularization_weight' method.
+        :return: torch.Tensor. The total regularization loss
+        """
+        total_reg_loss = torch.zeros((1,), device=self.device)
+        for weight_list, l1, l2 in self.regularization_weight:
+            for w in weight_list:
+                if isinstance(w, tuple):
+                    parameter = w[1]
+                else:
+                    parameter = w
+                if l1 > 0:
+                    total_reg_loss += torch.sum(l1 * torch.abs(parameter))
+
+                if l2 > 0:
+                    try:
+                        total_reg_loss += torch.sum(l2 * torch.square(parameter))
+                    except AttributeError:
+                        total_reg_loss += torch.sum(l2 * parameter * parameter)
+
+        return total_reg_loss
