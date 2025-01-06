@@ -16,10 +16,7 @@ from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
                       build_input_features, create_embedding_matrix)
 from ..layers import PredictionLayer
 
-try:
-    from tensorflow.python.keras.callbacks import CallbackList
-except ImportError:
-    from tensorflow.python.keras._impl.keras.callbacks import CallbackList
+from tensorflow.python.keras.callbacks import CallbackList
 
 
 class BaseModel(nn.Module):
