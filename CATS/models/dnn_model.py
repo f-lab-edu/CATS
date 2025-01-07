@@ -92,3 +92,39 @@ class DNNModel(BaseModel):
         )
         self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_linear)
         self.to(device)
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        """
+        feed-forward
+        :param inputs: inputs batch train data
+        :return: predict value
+        """
+        sparse_embedding_list = [
+            self.embedding_dict[feat.embedding_name](
+                inputs[
+                    :,
+                    self.feature_index[feat.name][0] : self.feature_index[feat.name][1],
+                ].long()
+            )
+            for feat in self.sparse_feature_columns
+        ]
+
+        dense_value_list = [
+            inputs[
+                :, self.feature_index[feat.name][0] : self.feature_index[feat.name][1]
+            ]
+            for feat in self.dense_feature_columns
+        ]
+
+        sparse_dnn_input = torch.flatten(
+            torch.cat(sparse_embedding_list, dim=-1), start_dim=1
+        )
+        dense_dnn_input = torch.flatten(
+            torch.cat(dense_value_list, dim=-1), start_dim=1
+        )
+        dnn_input = torch.cat([sparse_dnn_input, dense_dnn_input], dim=-1)
+
+        dnn_out = self.dnn(dnn_input)
+        logit = self.dnn_linear(dnn_out)
+        y_pred = self.out(logit)
+        return y_pred
