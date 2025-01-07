@@ -1,8 +1,11 @@
+from typing import List, Literal, Union
+
 import torch
 import torch.nn as nn
 
-from .basemodel import BaseModel
+from ..inputs import DenseFeat, SparseFeat, VarLenSparseFeat
 from ..layers import DNN
+from .basemodel import BaseModel
 
 
 class DNNModel(BaseModel):
