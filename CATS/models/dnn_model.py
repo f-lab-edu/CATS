@@ -54,14 +54,16 @@ class DNNModel(BaseModel):
         )
 
         self.dnn_hidden_units = dnn_hidden_units
-        self.dnn = DNN(self._compute_input_dim(dnn_feature_columns),
-                       dnn_hidden_units,
-                       activation=dnn_activation,
-                       use_bn=dnn_use_bn,
-                       l2_reg=l2_reg_dnn,
-                       dropout_rate=dnn_dropout,
-                       init_std=init_std,
-                       device=device)
+        self.dnn = DNN(
+            self._compute_input_dim(dnn_feature_columns),
+            dnn_hidden_units,
+            activation=dnn_activation,
+            use_bn=dnn_use_bn,
+            l2_reg=l2_reg_dnn,
+            dropout_rate=dnn_dropout,
+            init_std=init_std,
+            device=device,
+        )
         dnn_linear_in_feature = dnn_hidden_units[-1]
         self.dnn_linear = nn.Linear(dnn_linear_in_feature, 1, bias=False).to(device)
         self.add_regularization_weight(
@@ -73,5 +75,3 @@ class DNNModel(BaseModel):
         )
         self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_linear)
         self.to(device)
-
-
