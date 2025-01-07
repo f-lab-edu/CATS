@@ -3,7 +3,8 @@ from typing import List, Literal, Union
 import torch
 import torch.nn as nn
 
-from ..inputs import DenseFeat, SparseFeat, VarLenSparseFeat, create_embedding_matrix
+from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
+                      create_embedding_matrix)
 from ..layers import DNN
 from .basemodel import BaseModel
 
@@ -65,13 +66,20 @@ class DNNModel(BaseModel):
             device=device,
         )
 
-        self.sparse_feature_columns = list(
-            filter(lambda x: isinstance(x, SparseFeat), dnn_feature_columns)) if len(dnn_feature_columns) else []
-        self.dense_feature_columns = list(
-            filter(lambda x: isinstance(x, DenseFeat), dnn_feature_columns)) if len(dnn_feature_columns) else []
+        self.sparse_feature_columns = (
+            list(filter(lambda x: isinstance(x, SparseFeat), dnn_feature_columns))
+            if len(dnn_feature_columns)
+            else []
+        )
+        self.dense_feature_columns = (
+            list(filter(lambda x: isinstance(x, DenseFeat), dnn_feature_columns))
+            if len(dnn_feature_columns)
+            else []
+        )
 
-        self.embedding_dict = create_embedding_matrix(dnn_feature_columns, init_std, linear=True, sparse=False,
-                                                      device=device)
+        self.embedding_dict = create_embedding_matrix(
+            dnn_feature_columns, init_std, linear=True, sparse=False, device=device
+        )
 
         dnn_linear_in_feature = dnn_hidden_units[-1]
         self.dnn_linear = nn.Linear(dnn_linear_in_feature, 1, bias=False).to(device)
