@@ -277,7 +277,7 @@ class BaseModel(nn.Module):
 
         sparse_feature_columns = list(
             filter(
-                lambda x: isinstance(x, (SparseFeat, VarLenSparseFeat)), feature_columns
+                lambda x: isinstance(x, SparseFeat), feature_columns
             )
             if len(feature_columns)
             else []
