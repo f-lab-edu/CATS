@@ -59,16 +59,11 @@ class BaseModel(nn.Module):
             dnn_feature_columns, init_std, sparse=False, device=device
         )
 
-        self.linear_model = nn.Linear(
-            self._compute_input_dim(linear_feature_columns), 1, bias=False
-        ).to(device)
-
         self.regularization_weight = []
 
         self.add_regularization_weight(
             self.embedding_dict.parameters(), l2=l2_reg_embedding
         )
-        self.add_regularization_weight(self.linear_model.parameters(), l2=l2_reg_linear)
 
         self.out = PredictionLayer(task)
         self.to(device)
