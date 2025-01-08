@@ -225,14 +225,6 @@ class BaseModel(nn.Module):
                 for name in self.metrics:
                     eval_str += " - " + name + ": {0: .4f}".format(epoch_logs[name])
 
-                if do_validation:
-                    for name in self.metrics:
-                        eval_str += (
-                            " - "
-                            + "val_"
-                            + name
-                            + ": {0: .4f}".format(epoch_logs["val_" + name])
-                        )
                 logging.info(eval_str)
                 callbacks.on_epoch_end(epoch, epoch_logs)
                 if self.stop_training:
