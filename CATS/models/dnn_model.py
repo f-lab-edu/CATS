@@ -77,10 +77,6 @@ class DNNModel(BaseModel):
             else []
         )
 
-        self.embedding_dict = create_embedding_matrix(
-            dnn_feature_columns, init_std, linear=True, sparse=False, device=device
-        )
-
         dnn_linear_in_feature = dnn_hidden_units[-1]
         self.dnn_linear = nn.Linear(dnn_linear_in_feature, 1, bias=False).to(device)
         self.add_regularization_weight(
