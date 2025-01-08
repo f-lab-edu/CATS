@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import *
 from tensorflow.keras.callbacks import Callback
+from tensorflow.python.keras.callbacks import CallbackList
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -16,8 +17,6 @@ from ..callbacks import History
 from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
                       build_input_features, create_embedding_matrix)
 from ..layers import PredictionLayer
-
-from tensorflow.python.keras.callbacks import CallbackList
 
 
 class BaseModel(nn.Module):
@@ -276,9 +275,7 @@ class BaseModel(nn.Module):
         input_dim = 0
 
         sparse_feature_columns = list(
-            filter(
-                lambda x: isinstance(x, SparseFeat), feature_columns
-            )
+            filter(lambda x: isinstance(x, SparseFeat), feature_columns)
             if len(feature_columns)
             else []
         )
