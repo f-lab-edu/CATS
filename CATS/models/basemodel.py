@@ -419,7 +419,10 @@ class BaseModel(nn.Module):
         :param l1: The lambda value determining the strength of L1 regularization.
         :param l2: The lambda value determining the strength of L2 regularization.
         """
-        weight_list = [weight_list]
+        if isinstance(weight_list, torch.nn.parameter.Parameter):
+            weight_list = [weight_list]
+        else:
+            weight_list = list(weight_list)
         self.regularization_weight.append((weight_list, l1, l2))
 
     def get_regularization_loss(self) -> torch.Tensor:
