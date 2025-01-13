@@ -247,6 +247,25 @@ class BaseModel(nn.Module):
 
         return self.historys
 
+    def evaluate(
+        self,
+        x: Union[List[np.ndarray]],
+        y: Union[np.ndarray, List[np.ndarray]],
+        batch_size: int = 256,
+    ) -> Dict:
+        """
+        evaluate model in test datasets. evaluate by self.metrics
+        :param x: Numpy array of test data, or list of Numpy arrays
+        :param y: Numpy array of target data, or list of Numpy arrays
+        :param batch_size: Integer or `None`. Number of samples per evaluation step.
+        :return: Dict contains metric names and metric values.
+        """
+        pred_ans = self.predict(x, batch_size)
+        eval_result = {}
+        for name, metric_fun in self.metrics.items():
+            eval_result[name] = metric_fun(y, pred_ans)
+        return eval_result
+
     def predict(
         self, x: Union[List[np.ndarray], Dict[str, np.ndarray]], batch_size: int = 256
     ) -> np.ndarray:
