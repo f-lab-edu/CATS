@@ -10,7 +10,7 @@ from CATS.models.dnn_model import *
 
 logging.basicConfig(level=logging.INFO)
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # python train_sample.py
     data = pd.read_csv("./example/criteo_example.txt")
 
     sparse_features = ["C" + str(i) for i in range(1, 27)]
