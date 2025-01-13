@@ -24,7 +24,6 @@ class BaseModel(nn.Module):
         self,
         linear_feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
         dnn_feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
-        l2_reg_linear: float = 1e-5,
         l2_reg_embedding: float = 1e-5,
         init_std: float = 0.0001,
         seed: int = 1024,
