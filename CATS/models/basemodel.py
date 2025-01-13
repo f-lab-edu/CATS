@@ -1,7 +1,8 @@
 
 import logging
 import time
-from typing import Callable, Dict, Iterable, List, Literal, Union
+from typing import Callable, Dict, Iterable, List, Literal, Tuple, Union
+
 
 import numpy as np
 import torch
@@ -14,7 +15,8 @@ from tqdm import tqdm
 
 from ..callbacks import History
 from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
-                      build_input_features, create_embedding_matrix)
+                      build_input_features, create_embedding_matrix,
+                      embedding_lookup, get_dense_inputs)
 from ..layers import PredictionLayer
 
 from tensorflow.python.keras.callbacks import CallbackList
@@ -420,6 +422,37 @@ class BaseModel(nn.Module):
                 self.metrics_names.append(metric)
         return metrics_dict
 
+    def input_from_feature_columns(
+        self, inputs: torch.Tensor, feature_columns: List[Union[SparseFeat, DenseFeat]]
+    ) -> Tuple[List, List]:
+        """
+        Get input data from feature columns.
+        :param inputs: input tensor
+        :param feature_columns: list about feature instances (SparseFeat, DenseFeat, VarLenSparseFeat)
+        :return: sparse embedding value list and dense input value list
+        """
+
+        sparse_feature_columns = (
+            list(filter(lambda x: isinstance(x, SparseFeat), feature_columns))
+            if len(feature_columns)
+            else []
+        )
+        dense_feature_columns = (
+            list(filter(lambda x: isinstance(x, DenseFeat), feature_columns))
+            if len(feature_columns)
+            else []
+        )
+
+        sparse_embedding_list = embedding_lookup(
+            inputs, self.embedding_dict, self.feature_index, sparse_feature_columns
+        )
+
+        dense_value_list = get_dense_inputs(
+            inputs, self.feature_index, dense_feature_columns
+        )
+
+        return sparse_embedding_list, dense_value_list
+
     def add_regularization_weight(
         self,
         weight_list: Iterable[torch.nn.parameter.Parameter],
@@ -458,3 +491,4 @@ class BaseModel(nn.Module):
                         total_reg_loss += torch.sum(l2 * parameter * parameter)
 
         return total_reg_loss
+
