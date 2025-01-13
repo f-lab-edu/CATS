@@ -3,13 +3,13 @@ import logging
 import time
 from typing import Callable, Dict, Iterable, List, Literal, Tuple, Union
 
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import *
 from tensorflow.keras.callbacks import Callback
+from tensorflow.python.keras.callbacks import CallbackList
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -18,8 +18,6 @@ from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
                       build_input_features, create_embedding_matrix,
                       embedding_lookup, get_dense_inputs)
 from ..layers import PredictionLayer
-
-from tensorflow.python.keras.callbacks import CallbackList
 
 
 class BaseModel(nn.Module):
@@ -247,7 +245,36 @@ class BaseModel(nn.Module):
 
             callbacks.on_train_end()
 
-        return self.history
+        return self.historys
+
+    def predict(
+        self, x: Union[List[np.ndarray], Dict[str, np.ndarray]], batch_size: int = 256
+    ) -> np.ndarray:
+        """
+        predict x by model.
+        :param x: The input data, as a Numpy array
+        :param batch_size: Integer. If unspecified, it will default to 256.
+        :return: Numpy array of predictions.
+        """
+        model = self.eval()
+        if isinstance(x, dict):
+            x = [x[feature] for feature in self.feature_index]
+        for i in range(len(x)):
+            if len(x[i].shape) == 1:
+                x[i] = np.expand_dims(x[i], axis=1)
+
+        tensor_data = TensorDataset(torch.from_numpy(np.concatenate(x, axis=-1)))
+        test_loader = DataLoader(
+            dataset=tensor_data, shuffle=False, batch_size=batch_size
+        )
+
+        pred_ans = []
+        with torch.no_grad():
+            for _, x_test in enumerate(test_loader):
+                x = x_test[0].to(self.device).float()
+                y_pred = model(x).cpu().data.numpy()
+                pred_ans.append(y_pred)
+        return np.concatenate(pred_ans).astype("float64")
 
     def compile(
         self,
@@ -491,4 +518,3 @@ class BaseModel(nn.Module):
                         total_reg_loss += torch.sum(l2 * parameter * parameter)
 
         return total_reg_loss
-
