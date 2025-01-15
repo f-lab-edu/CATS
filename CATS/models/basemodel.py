@@ -110,7 +110,8 @@ class BaseModel(nn.Module):
         # setting train & validation data
         if isinstance(x, dict):
             x = [x[feature] for feature in self.feature_index]
-
+        val_x = []
+        val_y = []
         do_validation = False
         if validation_split and 0. < validation_split <= 1.0:
             do_validation = True
@@ -122,9 +123,6 @@ class BaseModel(nn.Module):
                 x, val_x = [x_v[:split_at] for x_v in x], [x_v[split_at:] for x_v in x]
                 y, val_y = y[:split_at], y[split_at:]
                 y = np.asarray(y)
-        else:
-            val_x = []
-            val_y = []
 
         for i in range(len(x)):
             if len(x[i].shape) == 1:
@@ -217,6 +215,11 @@ class BaseModel(nn.Module):
             epoch_logs["loss"] = total_loss_epoch / sample_num
             for name, result in train_result.items():
                 epoch_logs[name] = np.sum(result) / steps_per_epoch
+
+            if do_validation:
+                eval_result = self.evaluate(val_x, val_y, batch_size)
+                for name, result in eval_result.items():
+                    epoch_logs["val_" + name] = result
 
             # verbose
             if verbose > 0:
