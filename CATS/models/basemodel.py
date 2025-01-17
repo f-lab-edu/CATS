@@ -3,7 +3,6 @@ import logging
 import time
 from typing import Callable, Dict, Iterable, List, Literal, Tuple, Union
 
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -105,7 +104,8 @@ class BaseModel(nn.Module):
         # setting train & validation data
         if isinstance(x, dict):
             x = [x[feature] for feature in self.feature_index]
-
+        val_x = []
+        val_y = []
         do_validation = False
         if validation_split and 0. < validation_split <= 1.0:
             do_validation = True
@@ -117,9 +117,6 @@ class BaseModel(nn.Module):
                 x, val_x = [x_v[:split_at] for x_v in x], [x_v[split_at:] for x_v in x]
                 y, val_y = y[:split_at], y[split_at:]
                 y = np.asarray(y)
-        else:
-            val_x = []
-            val_y = []
 
         for i in range(len(x)):
             if len(x[i].shape) == 1:
@@ -213,6 +210,11 @@ class BaseModel(nn.Module):
             for name, result in train_result.items():
                 epoch_logs[name] = np.sum(result) / steps_per_epoch
 
+            if do_validation:
+                eval_result = self.evaluate(val_x, val_y, batch_size)
+                for name, result in eval_result.items():
+                    epoch_logs["val_" + name] = result
+
             # verbose
             if verbose > 0:
                 epoch_time = int(time.time() - start_time)
@@ -232,7 +234,55 @@ class BaseModel(nn.Module):
 
             callbacks.on_train_end()
 
-        return self.history
+        return self.historys
+
+    def evaluate(
+        self,
+        x: Union[List[np.ndarray]],
+        y: Union[np.ndarray, List[np.ndarray]],
+        batch_size: int = 256,
+    ) -> Dict:
+        """
+        evaluate model in test datasets. evaluate by self.metrics
+        :param x: Numpy array of test data, or list of Numpy arrays
+        :param y: Numpy array of target data, or list of Numpy arrays
+        :param batch_size: Integer or `None`. Number of samples per evaluation step.
+        :return: Dict contains metric names and metric values.
+        """
+        pred_ans = self.predict(x, batch_size)
+        eval_result = {}
+        for name, metric_fun in self.metrics.items():
+            eval_result[name] = metric_fun(y, pred_ans)
+        return eval_result
+
+    def predict(
+        self, x: Union[List[np.ndarray], Dict[str, np.ndarray]], batch_size: int = 256
+    ) -> np.ndarray:
+        """
+        predict x by model.
+        :param x: The input data, as a Numpy array
+        :param batch_size: Integer. If unspecified, it will default to 256.
+        :return: Numpy array of predictions.
+        """
+        model = self.eval()
+        if isinstance(x, dict):
+            x = [x[feature] for feature in self.feature_index]
+        for i in range(len(x)):
+            if len(x[i].shape) == 1:
+                x[i] = np.expand_dims(x[i], axis=1)
+
+        tensor_data = TensorDataset(torch.from_numpy(np.concatenate(x, axis=-1)))
+        test_loader = DataLoader(
+            dataset=tensor_data, shuffle=False, batch_size=batch_size
+        )
+
+        pred_ans = []
+        with torch.no_grad():
+            for _, x_test in enumerate(test_loader):
+                x = x_test[0].to(self.device).float()
+                y_pred = model(x).cpu().data.numpy()
+                pred_ans.append(y_pred)
+        return np.concatenate(pred_ans).astype("float64")
 
     def compile(
         self,
@@ -477,4 +527,3 @@ class BaseModel(nn.Module):
                         total_reg_loss += torch.sum(l2 * parameter * parameter)
 
         return total_reg_loss
-
