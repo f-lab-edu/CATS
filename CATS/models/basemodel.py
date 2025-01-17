@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import *
 from tensorflow.keras.callbacks import Callback
+from tensorflow.python.keras.callbacks import CallbackList
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -19,15 +20,12 @@ from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
                       embedding_lookup, get_dense_inputs)
 from ..layers import PredictionLayer
 
-from tensorflow.python.keras.callbacks import CallbackList
-
 
 class BaseModel(nn.Module):
     def __init__(
         self,
         linear_feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
         dnn_feature_columns: List[Union[SparseFeat, DenseFeat, VarLenSparseFeat]],
-        l2_reg_linear: float = 1e-5,
         l2_reg_embedding: float = 1e-5,
         init_std: float = 0.0001,
         seed: int = 1024,
@@ -61,16 +59,11 @@ class BaseModel(nn.Module):
             dnn_feature_columns, init_std, sparse=False, device=device
         )
 
-        self.linear_model = nn.Linear(
-            self._compute_input_dim(linear_feature_columns), 1, bias=False
-        ).to(device)
-
         self.regularization_weight = []
 
         self.add_regularization_weight(
             self.embedding_dict.parameters(), l2=l2_reg_embedding
         )
-        self.add_regularization_weight(self.linear_model.parameters(), l2=l2_reg_linear)
 
         self.out = PredictionLayer(task)
         self.to(device)
@@ -232,14 +225,6 @@ class BaseModel(nn.Module):
                 for name in self.metrics:
                     eval_str += " - " + name + ": {0: .4f}".format(epoch_logs[name])
 
-                if do_validation:
-                    for name in self.metrics:
-                        eval_str += (
-                            " - "
-                            + "val_"
-                            + name
-                            + ": {0: .4f}".format(epoch_logs["val_" + name])
-                        )
                 logging.info(eval_str)
                 callbacks.on_epoch_end(epoch, epoch_logs)
                 if self.stop_training:
@@ -291,9 +276,7 @@ class BaseModel(nn.Module):
         input_dim = 0
 
         sparse_feature_columns = list(
-            filter(
-                lambda x: isinstance(x, (SparseFeat, VarLenSparseFeat)), feature_columns
-            )
+            filter(lambda x: isinstance(x, SparseFeat), feature_columns)
             if len(feature_columns)
             else []
         )
@@ -465,7 +448,10 @@ class BaseModel(nn.Module):
         :param l1: The lambda value determining the strength of L1 regularization.
         :param l2: The lambda value determining the strength of L2 regularization.
         """
-        weight_list = [weight_list]
+        if isinstance(weight_list, torch.nn.parameter.Parameter):
+            weight_list = [weight_list]
+        else:
+            weight_list = list(weight_list)
         self.regularization_weight.append((weight_list, l1, l2))
 
     def get_regularization_loss(self) -> torch.Tensor:
