@@ -234,7 +234,7 @@ class BaseModel(nn.Module):
 
             callbacks.on_train_end()
 
-        return self.historys
+        return self.history
 
     def evaluate(
         self,
