@@ -13,7 +13,7 @@ from tensorflow.python.keras.callbacks import CallbackList
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ..callbacks import History
+from ..callbacks import History, ModelCheckpointTorch
 from ..inputs import (DenseFeat, SparseFeat, VarLenSparseFeat,
                       build_input_features, create_embedding_matrix,
                       embedding_lookup, get_dense_inputs)
@@ -72,6 +72,9 @@ class BaseModel(nn.Module):
         self._ckpt_saved_epoch = False  # used for EarlyStopping in tf1.14
 
         self.history = History()
+        self.model_checkpoint = ModelCheckpointTorch(
+            "./checkpoints/weights.e{epoch:02d}-auc{val_auc:.2f}.pt"
+        )
 
     def fit(
         self,
@@ -138,7 +141,10 @@ class BaseModel(nn.Module):
         steps_per_epoch = (sample_num - 1) // batch_size + 1
 
         # configure callbacks
-        callbacks = (callbacks or []) + [self.history]  # add history callback
+        callbacks = (callbacks or []) + [
+            self.history,
+            self.model_checkpoint,
+        ]  # add history callback
         callbacks = CallbackList(callbacks)
         callbacks.set_model(self)
         callbacks.on_train_begin()
@@ -227,6 +233,15 @@ class BaseModel(nn.Module):
                 for name in self.metrics:
                     eval_str += " - " + name + ": {0: .4f}".format(epoch_logs[name])
 
+                if do_validation:
+                    for name in self.metrics:
+                        eval_str += (
+                            " - "
+                            + "val_"
+                            + name
+                            + ": {0: .4f}".format(epoch_logs["val_" + name])
+                        )
+
                 logging.info(eval_str)
                 callbacks.on_epoch_end(epoch, epoch_logs)
                 if self.stop_training:
@@ -234,7 +249,7 @@ class BaseModel(nn.Module):
 
             callbacks.on_train_end()
 
-        return self.historys
+        return self.history
 
     def evaluate(
         self,
